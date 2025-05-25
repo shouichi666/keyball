@@ -4,12 +4,27 @@
 
 // --- Gesture State Handling ---
 static bool is_en_lgui_tapped = false;
-static int8_t active_mouse_lr_action = 0;     // 0: なし, 1: RIGHT系アクション実行中, -1: LEFT系アクション実行中　
+
+// New: マウスジェスチャーの状態を示すためのEnum
+typedef enum {
+    MOUSE_ACTION_STATE_NONE = 0,         // 0: なし (元の0に相当)
+    MOUSE_ACTION_STATE_FOR_LEFT_SWIPE,   // 左スワイプに対するアクション実行中 (元の1に相当: current_x < 0 の時)
+    MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE,  // 右スワイプに対するアクション実行中 (元の-1に相当: current_x > 0 の時)
+    MOUSE_ACTION_STATE_FOR_UP_SWIPE,     // New: 上スワイプに対するアクション実行中
+    MOUSE_ACTION_STATE_FOR_DOWN_SWIPE    // New: 下スワイプに対するアクション実行中
+} mouse_action_active_state_t;
+
+// Modified: active_mouse_action の型を新しいEnumに変更
+static mouse_action_active_state_t active_mouse_action =
+    MOUSE_ACTION_STATE_NONE;                  // 0: なし, 1: RIGHT系アクション実行中, -1:
+                                              // LEFT系アクション実行中　(このコメントは元の型の説明として残します)
 static uint16_t mouse_action_cooldown_timer;  // アクションのクールダウン用タイマー
 static const uint16_t MOUSE_ACTION_COOLDOWN_MS = 200;  // クールダウン時間(ms)、調整可能
 // ★「ほぼ真横」判定のための係数。大きいほど、より真横に近い動きでないと反応しない
 // 例: 2 ならX軸の動きがY軸の2倍以上、3 なら3倍以上必要。
-static const int16_t HORIZONTAL_SENSITIVITY_FACTOR = 2;
+static const int16_t HORIZONTAL_SENSITIVITY_FACTOR = 4;
+// New: ★「ほぼ真縦」判定のための係数。大きいほど、より真縦に近い動きでないと反応しない
+static const int16_t VERTICAL_SENSITIVITY_FACTOR = 4;
 
 // --- Click State Handling ---
 typedef enum {
@@ -203,10 +218,13 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
         if (is_en_lgui_tapped &&
             en_lgui_config.state.active_for_hold) {  // EN_LGUIが物理的に押され、かつホールドが確定している
-            if (active_mouse_lr_action == 0 && timer_elapsed(mouse_action_cooldown_timer) > MOUSE_ACTION_COOLDOWN_MS) {
+            // Modified: active_mouse_action のチェックを新しいEnum定数に変更
+            if (active_mouse_action == MOUSE_ACTION_STATE_NONE &&
+                timer_elapsed(mouse_action_cooldown_timer) > MOUSE_ACTION_COOLDOWN_MS) {
                 bool action_performed_in_this_cycle = false;
                 bool lgui_temporarily_unregistered = false;
                 bool is_mostly_horizontal = false;
+                bool is_mostly_vertical = false;  // New: 縦方向ジェスチャー判定用フラグ
 
                 // ★「ほぼ真横」の判定ロジック
                 if (current_x != 0) {      // X軸方向に動きがあることが前提
@@ -220,8 +238,20 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                     }
                 }
 
-                if (is_mostly_horizontal) {  // 「ほぼ真横」と判定された場合のみジェスチャー実行
+                // New: ★「ほぼ真縦」の判定ロジック (横方向ジェスチャーが優先される)
+                if (!is_mostly_horizontal &&
+                    current_y != 0) {      // 横方向のジェスチャーが判定されなかった場合のみ縦方向を評価
+                    if (current_x == 0) {  // 完全に真縦の動き
+                        is_mostly_vertical = true;
+                    } else {
+                        // Y軸の移動量が、X軸の移動量 * 係数 よりも大きいか判定
+                        if (my_abs(current_y) > my_abs(current_x) * VERTICAL_SENSITIVITY_FACTOR) {
+                            is_mostly_vertical = true;
+                        }
+                    }
+                }
 
+                if (is_mostly_horizontal) {  // 「ほぼ真横」と判定された場合のみジェスチャー実行
                     // macOS向け: EN_LGUIのホールドターゲットがKC_LGUIの場合、一時的に無効化
                     if (en_lgui_config.hold_target == KC_LGUI) {
                         unregister_code(KC_LGUI);
@@ -232,51 +262,89 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                         register_code(KC_LCTL);
                         tap_code(KC_RIGHT);  // マウス左移動でCtrl+KC_RIGHT (macOSではCtrl+Right Arrow)
                         unregister_code(KC_LCTL);
-                        active_mouse_lr_action = 1;
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;  // Modified: Enum値を設定
                         action_performed_in_this_cycle = true;
                         gesture_action_was_performed = true;
                     } else if (current_x > 0) {  // カーソルが右方向に動いている
                         register_code(KC_LCTL);
                         tap_code(KC_LEFT);  // マウス右移動でCtrl+KC_LEFT (macOSではCtrl+Left Arrow)
                         unregister_code(KC_LCTL);
-                        active_mouse_lr_action = -1;
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;  // Modified: Enum値を設定
                         action_performed_in_this_cycle = true;
                         gesture_action_was_performed = true;
                     }
-
-                    // 一時的に無効化したKC_LGUIを再有効化 (EN_LGUIがまだホールドされている場合のみ)
-                    if (lgui_temporarily_unregistered) {
-                        if (is_en_lgui_tapped && en_lgui_config.state.active_for_hold) {
-                            register_code(KC_LGUI);
-                        }
+                    // New: 縦方向ジェスチャーの処理ブロック
+                } else if (is_mostly_vertical) {  // 「ほぼ真縦」と判定された場合のみジェスチャー実行
+                    // macOS向け: EN_LGUIのホールドターゲットがKC_LGUIの場合、一時的に無効化
+                    // (もし縦ジェスチャーでも同様の対応が必要な場合)
+                    if (en_lgui_config.hold_target == KC_LGUI) {
+                        unregister_code(KC_LGUI);
+                        lgui_temporarily_unregistered = true;
                     }
 
-                    if (action_performed_in_this_cycle) {
-                        mouse_action_cooldown_timer = timer_read();
+                    // カーソルが上方向に動いている
+                    if (current_y < 0) {
+                        // New: 上方向のジェスチャーアクション (例: Page Up)
+                        // 必要に応じてアクションを変更してください (例: Mission Controlなど)
+                        // register_code(KC_LCTL); tap_code(KC_UP); unregister_code(KC_LCTL);
+                        register_code(KC_LCTL);
+                        tap_code(KC_UP);
+                        unregister_code(KC_LCTL);
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;  // New: Enum値を設定
+                        action_performed_in_this_cycle = true;
+                        gesture_action_was_performed = true;
+                    } else if (current_y > 0) {  // カーソルが下方向に動いている
+                        // New: 下方向のジェスチャーアクション (例: Page Down)
+                        // 必要に応じてアクションを変更してください (例: Application Windowsなど)
+                        // register_code(KC_LCTL); tap_code(KC_DOWN); unregister_code(KC_LCTL);
+                        register_code(KC_LCTL);
+                        tap_code(KC_DOWN);
+                        unregister_code(KC_LCTL);
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_DOWN_SWIPE;  // New: Enum値を設定
+                        action_performed_in_this_cycle = true;
+                        gesture_action_was_performed = true;
                     }
                 }
+
+                // 一時的に無効化したKC_LGUIを再有効化 (EN_LGUIがまだホールドされている場合のみ)
+                if (lgui_temporarily_unregistered) {
+                    if (is_en_lgui_tapped && en_lgui_config.state.active_for_hold) {
+                        register_code(KC_LGUI);
+                    }
+                }
+
+                if (action_performed_in_this_cycle) {
+                    mouse_action_cooldown_timer = timer_read();
+                }
             }
-            // active_mouse_lr_action のリセットロジック
-            else if (active_mouse_lr_action != 0) {
-                if (current_x == 0) {  // 水平の動きが止まった
-                    active_mouse_lr_action = 0;
-                } else if ((active_mouse_lr_action == 1 && current_x > 0) ||   // 左ブロック中に右へ
-                           (active_mouse_lr_action == -1 && current_x < 0)) {  // 右ブロック中に左へ
-                    active_mouse_lr_action = 0;
+            // Modified: active_mouse_action のリセットロジック (Enumと上下方向に対応)
+            else if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
+                if (current_x == 0 && current_y == 0) {  // 水平および垂直の動きが止まった
+                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
+                } else if ((active_mouse_action == MOUSE_ACTION_STATE_FOR_LEFT_SWIPE &&
+                            current_x > 0) ||  // 左ブロック中に右へ
+                           (active_mouse_action == MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE &&
+                            current_x < 0) ||  // 右ブロック中に左へ
+                           (active_mouse_action == MOUSE_ACTION_STATE_FOR_UP_SWIPE &&
+                            current_y > 0) ||  // New: 上ブロック中に下へ
+                           (active_mouse_action == MOUSE_ACTION_STATE_FOR_DOWN_SWIPE &&
+                            current_y < 0)  // New: 下ブロック中に上へ
+                ) {
+                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 }
             }
         } else {  // EN_LGUI がタップされていない、またはホールドがアクティブでない場合
-            if (active_mouse_lr_action != 0) {
-                active_mouse_lr_action = 0;
-                if (!is_en_lgui_tapped) {  // 物理的に離されたらクールダウンもリセット
+            if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {  // Modified: Enum定数で比較
+                active_mouse_action = MOUSE_ACTION_STATE_NONE;     // Modified: Enum定数を設定
+                if (!is_en_lgui_tapped) {                          // 物理的に離されたらクールダウンもリセット
                     mouse_action_cooldown_timer = timer_read();
                 }
             }
         }
-    } else {                                // マウスが止まっている場合 (current_x == 0 && current_y == 0)
-        if (active_mouse_lr_action != 0) {  // ブロックされていたら解除
-            active_mouse_lr_action = 0;
-            mouse_action_cooldown_timer = timer_read();  // マウス停止時もクールダウンをリセット
+    } else {  // マウスが止まっている場合 (current_x == 0 && current_y == 0)
+        if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {  // Modified: Enum定数で比較 // ブロックされていたら解除
+            active_mouse_action = MOUSE_ACTION_STATE_NONE;     // Modified: Enum定数を設定
+            mouse_action_cooldown_timer = timer_read();        // マウス停止時もクールダウンをリセット
         }
         switch (state) {
             case CLICKING:
@@ -374,8 +442,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // 即座にタイムアウトするように調整
             } else {
                 is_en_lgui_tapped = false;
-                active_mouse_lr_action = 0;
-                mouse_action_cooldown_timer = timer_read();  // EN_LGUIを離したらタイマーもリセット
+                active_mouse_action = MOUSE_ACTION_STATE_NONE;  // Modified: Enum定数を設定
+                mouse_action_cooldown_timer = timer_read();     // EN_LGUIを離したらタイマーもリセット
             }
 
             return process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
