@@ -1,5 +1,16 @@
 #include "custom_features.h"  // 上で作成したヘッダーファイルをインクルード
 
+#include "timer.h"  // タイマー関数を使用するために追加
+
+// --- Gesture State Handling ---
+static bool is_en_lgui_tapped = false;
+static int8_t active_mouse_lr_action = 0;     // 0: なし, 1: RIGHT系アクション実行中, -1: LEFT系アクション実行中　
+static uint16_t mouse_action_cooldown_timer;  // アクションのクールダウン用タイマー
+static const uint16_t MOUSE_ACTION_COOLDOWN_MS = 200;  // クールダウン時間(ms)、調整可能
+// ★「ほぼ真横」判定のための係数。大きいほど、より真横に近い動きでないと反応しない
+// 例: 2 ならX軸の動きがY軸の2倍以上、3 なら3倍以上必要。
+static const int16_t HORIZONTAL_SENSITIVITY_FACTOR = 2;
+
 // --- Click State Handling ---
 typedef enum {
     NONE = 0,
@@ -159,6 +170,10 @@ static void matrix_scan_tap_hold_key(tap_hold_key_config_t *config) {
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     int16_t current_x = mouse_report.x;
     int16_t current_y = mouse_report.y;
+    // 返却するマウスレポートを準備 (初期値は受け取ったレポート)
+    report_mouse_t report_to_send = mouse_report;
+    // この関数呼び出しでジェスチャーが実行されたかどうかを示すフラグ
+    bool gesture_action_was_performed = false;
 
     if (current_x != 0 || current_y != 0) {  // マウスが動いた場合
         switch (state) {
@@ -182,10 +197,87 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 // マウスが動き始めたらWAITING状態に移行し、タイマーを開始
                 click_timer = timer_read();
                 state = WAITING;
-                mouse_movement_accumulator = 0;  // 蓄積値をリセット
+                mouse_movement_accumulator = 0;
                 break;
         }
-    } else {  // マウスが止まっている場合
+
+        if (is_en_lgui_tapped &&
+            en_lgui_config.state.active_for_hold) {  // EN_LGUIが物理的に押され、かつホールドが確定している
+            if (active_mouse_lr_action == 0 && timer_elapsed(mouse_action_cooldown_timer) > MOUSE_ACTION_COOLDOWN_MS) {
+                bool action_performed_in_this_cycle = false;
+                bool lgui_temporarily_unregistered = false;
+                bool is_mostly_horizontal = false;
+
+                // ★「ほぼ真横」の判定ロジック
+                if (current_x != 0) {      // X軸方向に動きがあることが前提
+                    if (current_y == 0) {  // 完全に真横の動き
+                        is_mostly_horizontal = true;
+                    } else {
+                        // X軸の移動量が、Y軸の移動量 * 係数 よりも大きいか判定
+                        if (my_abs(current_x) > my_abs(current_y) * HORIZONTAL_SENSITIVITY_FACTOR) {
+                            is_mostly_horizontal = true;
+                        }
+                    }
+                }
+
+                if (is_mostly_horizontal) {  // 「ほぼ真横」と判定された場合のみジェスチャー実行
+
+                    // macOS向け: EN_LGUIのホールドターゲットがKC_LGUIの場合、一時的に無効化
+                    if (en_lgui_config.hold_target == KC_LGUI) {
+                        unregister_code(KC_LGUI);
+                        lgui_temporarily_unregistered = true;
+                    }
+
+                    if (current_x < 0) {  // カーソルが左方向に動いている
+                        register_code(KC_LCTL);
+                        tap_code(KC_RIGHT);  // マウス左移動でCtrl+KC_RIGHT (macOSではCtrl+Right Arrow)
+                        unregister_code(KC_LCTL);
+                        active_mouse_lr_action = 1;
+                        action_performed_in_this_cycle = true;
+                        gesture_action_was_performed = true;
+                    } else if (current_x > 0) {  // カーソルが右方向に動いている
+                        register_code(KC_LCTL);
+                        tap_code(KC_LEFT);  // マウス右移動でCtrl+KC_LEFT (macOSではCtrl+Left Arrow)
+                        unregister_code(KC_LCTL);
+                        active_mouse_lr_action = -1;
+                        action_performed_in_this_cycle = true;
+                        gesture_action_was_performed = true;
+                    }
+
+                    // 一時的に無効化したKC_LGUIを再有効化 (EN_LGUIがまだホールドされている場合のみ)
+                    if (lgui_temporarily_unregistered) {
+                        if (is_en_lgui_tapped && en_lgui_config.state.active_for_hold) {
+                            register_code(KC_LGUI);
+                        }
+                    }
+
+                    if (action_performed_in_this_cycle) {
+                        mouse_action_cooldown_timer = timer_read();
+                    }
+                }
+            }
+            // active_mouse_lr_action のリセットロジック
+            else if (active_mouse_lr_action != 0) {
+                if (current_x == 0) {  // 水平の動きが止まった
+                    active_mouse_lr_action = 0;
+                } else if ((active_mouse_lr_action == 1 && current_x > 0) ||   // 左ブロック中に右へ
+                           (active_mouse_lr_action == -1 && current_x < 0)) {  // 右ブロック中に左へ
+                    active_mouse_lr_action = 0;
+                }
+            }
+        } else {  // EN_LGUI がタップされていない、またはホールドがアクティブでない場合
+            if (active_mouse_lr_action != 0) {
+                active_mouse_lr_action = 0;
+                if (!is_en_lgui_tapped) {  // 物理的に離されたらクールダウンもリセット
+                    mouse_action_cooldown_timer = timer_read();
+                }
+            }
+        }
+    } else {                                // マウスが止まっている場合 (current_x == 0 && current_y == 0)
+        if (active_mouse_lr_action != 0) {  // ブロックされていたら解除
+            active_mouse_lr_action = 0;
+            mouse_action_cooldown_timer = timer_read();  // マウス停止時もクールダウンをリセット
+        }
         switch (state) {
             case CLICKING:
                 // マウスボタンが離された際の処理は KC_MY_BTN の
@@ -200,20 +292,26 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 // }
                 break;
             case WAITING:
-                // WAITING状態で一定時間（50ms）マウスの動きがなければNONE状態に戻る
-                // この50msは、微小な停止を無視するためのものか、あるいは即座にNONEに戻したくない場合の猶予時間
-                if (timer_elapsed(click_timer) > 50) {  // 50msは仮の値。必要に応じて調整。
-                    mouse_movement_accumulator = 0;     // 念のためリセット
+                if (timer_elapsed(click_timer) > 50) {
+                    mouse_movement_accumulator = 0;
                     state = NONE;
                 }
                 break;
-            default:  // NONE の場合など
-                // 特に行う処理なし
+            default:
                 break;
         }
     }
 
-    return mouse_report;
+    // ★ジェスチャーがこのサイクルで実行された場合、マウスカーソルの移動をキャンセル
+    if (gesture_action_was_performed) {
+        report_to_send.x = 0;
+        report_to_send.y = 0;
+        // ホイール移動もキャンセル
+        report_to_send.v = 0;
+        report_to_send.h = 0;
+    }
+
+    return report_to_send;
 }
 
 // 特定キーコードの動作をユーザー定義で上書きする処理
@@ -269,6 +367,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return process_tap_hold_key(&jp_mo2_config, record, other_key_pressed_while_tap_hold_pending);
 
         case EN_LGUI:
+            if (record->event.pressed) {
+                is_en_lgui_tapped = true;
+                // 押された瞬間はクールダウンタイマーをリセットして即座のアクションを許可
+                mouse_action_cooldown_timer =
+                    timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // 即座にタイムアウトするように調整
+            } else {
+                is_en_lgui_tapped = false;
+                active_mouse_lr_action = 0;
+                mouse_action_cooldown_timer = timer_read();  // EN_LGUIを離したらタイマーもリセット
+            }
+
             return process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
 
         default:
