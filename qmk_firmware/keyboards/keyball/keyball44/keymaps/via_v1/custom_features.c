@@ -53,7 +53,10 @@ typedef struct {
     hold_action_type_t hold_type;  // ホールドアクションの種類
 } tap_hold_key_config_t;
 
-// 各タップ・ホールドキーの設定
+// process_record_user 内で他のキーが押されたことを示すフラグ
+static bool other_key_pressed_while_tap_hold_pending = false;
+
+// 'JP_MO2'のタップ・ホールドキー設定
 static tap_hold_key_config_t jp_mo2_config = {
     .state = {0},
     .tap_keycode = KC_LNG1,  // 日本語入力のトグル等を想定
@@ -61,15 +64,13 @@ static tap_hold_key_config_t jp_mo2_config = {
     .hold_type = HOLD_TYPE_LAYER,
 };
 
+// 'EN_LGUI'のタップ・ホールドキー設定
 static tap_hold_key_config_t en_lgui_config = {
     .state = {0},
     .tap_keycode = KC_LNG2,  // 英語入力のトグル等を想定
     .hold_target = KC_LGUI,
     .hold_type = HOLD_TYPE_KEYCODE,
 };
-
-// process_record_user 内で他のキーが押されたことを示すフラグ
-static bool other_key_pressed_while_tap_hold_pending = false;
 
 // ホールドアクションを有効化するヘルパー関数
 static void activate_hold_action(tap_hold_key_config_t *config) {
@@ -154,7 +155,7 @@ static void matrix_scan_tap_hold_key(tap_hold_key_config_t *config) {
 // --- End of Tap/Hold Key Handling ---
 
 // 自動レイヤーの設定
-// https://github.com/kamiichi99/keyball/blob/main/qmk_firmware/keyboards/keyball/readme.md
+// 参考リポジトリ: https://github.com/kamiichi99/keyball/blob/main/qmk_firmware/keyboards/keyball/readme.md
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     int16_t current_x = mouse_report.x;
     int16_t current_y = mouse_report.y;
