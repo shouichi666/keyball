@@ -44,7 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 // 188ms以内に離すとタップ、それ以降はホールドと判定される
-#define TAPPING_TERM 188
+#define TAPPING_TERM 180
 
 // 自動マウス移動機能を有効にする（QMKのポイントデバイス機能の一部）
 #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -53,7 +53,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define AUTO_MOUSE_DEFAULT_LAYER 1
 
 // 光学センサーPMW3360DM の解像度 (CPI) の規定値
-#define KEYBALL_CPI_DEFAULT 700
-
-// スクロール速度の規定値
-#define KEYBALL_SCROLL_DIV_DEFAULT 5
+#define KEYBALL_CPI_DEFAULT 770
