@@ -396,6 +396,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case KC_BTN1:
             case KC_BTN2:
             case MO(_NAV_LAYER):
+            case LCTL(KC_TAB):
+            case RCS(KC_TAB):
                 // マウスボタンや関連の修飾キーは何もしない
                 break;
             default:
