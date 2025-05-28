@@ -24,16 +24,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // keymap for default (VIA)
     [0] = LAYOUT_universal(
         KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_BSPC   ,
-        KC_TAB   , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT   ,
+        LT(3,KC_TAB), KC_A  , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT   ,
         KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_DEL    ,
                               LGUI(KC_Z), KC_LCTL , KC_LALT  , EN_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LGUI(KC_SLSH)
     ),
 
     [1] = LAYOUT_universal(
-        QK_BOOT ,  _______ ,  _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______   ,
-        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , MO(_NAV_LAYER), KC_BTN1, KC_BTN1, KC_BTN2, LCTL(KC_TAB),
-        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , RCS(KC_TAB)   ,
-                              _______  , _______  ,  MO(_NAV_LAYER), _______ , _______ ,              _______ , _______ ,       _______       , _______  , _______
+        _______ ,  _______ ,  _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______   ,
+        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , KC_BTN1, MO(_NAV_LAYER), KC_BTN2, _______ ,
+        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , LCTL(KC_TAB), RCS(KC_TAB), _______ , _______ ,
+                              _______  , _______  ,  _______ , _______ , _______ ,              _______ , _______ ,       _______       , _______  , _______
     ),
 
     // [1] = LAYOUT_universal(
@@ -52,13 +52,22 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [3] = LAYOUT_universal(
-        QK_BOOT ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , LGUI(KC_W)  ,
-        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         LCTL(KC_LEFT), LCTL(KC_DOWN), LCTL(KC_UP), LCTL(KC_RIGHT), LSG(KC_TAB), LGUI(KC_TAB),
-        _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         LGUI(KC_LEFT), LGUI(KC_T)   , LGUI(KC_R) , LGUI(KC_RIGHT), _______    , _______     ,
-                              _______  , _______  , _______  , _______ , _______ ,                       _______ , _______ ,       _______       , _______  , _______
+        QK_BOOT ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
+        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
+        _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
+                              _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,       _______       , _______  , _______
     ),
 };
 // clang-format on
+
+// コンボで使用するキーコードの配列
+const uint16_t PROGMEM combo_kl[] = {KC_K, KC_L, COMBO_END};
+
+// コンボの定義
+combo_t key_combos[] = {
+    COMBO(combo_kl, KC_MINUS), // KC_K と KC_L の同時押しで KC_MINUS を出力
+};
+uint16_t combo_size = ARRAY_SIZE(key_combos);
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     // Auto enable scroll mode when the highest layer is 3
