@@ -65,7 +65,7 @@ const uint16_t PROGMEM combo_kl[] = {KC_K, KC_L, COMBO_END};
 
 // コンボの定義
 combo_t key_combos[] = {
-    COMBO(combo_kl, KC_MINUS), // KC_K と KC_L の同時押しで KC_MINUS を出力
+    COMBO(combo_kl, KC_MINUS),  // KC_K と KC_L の同時押しで KC_MINUS を出力
 };
 uint16_t combo_size = ARRAY_SIZE(key_combos);
 

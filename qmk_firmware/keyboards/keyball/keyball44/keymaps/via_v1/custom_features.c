@@ -328,6 +328,10 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         }
     }
 
+    // スクロール方向を反転させる処理
+    report_to_send.v = -report_to_send.v;
+    report_to_send.h = -report_to_send.h;
+
     // ジェスチャーがこのサイクルで実行された場合、マウスカーソルの移動をキャンセル
     if (gesture_action_was_performed) {
         report_to_send.x = 0;
