@@ -5,8 +5,10 @@
 
 // 独自のキー
 enum custom_keycodes {
-    JP_MO2,   // 単: 日本語変換、長押し: レイヤー２
-    EN_LGUI,  // 単: ローマ字変換、長押し: Command
+    JP_MO2,    // 単: 日本語変換、長押し: レイヤー２
+    EN_LGUI,   // 単: ローマ字変換、長押し: Command
+    MINS_MO2,  // 単: -、長押し:  レイヤー２
+    BS_MO2,    // 単: BS、長押し:  レイヤー２
 };
 
 enum custom_layers {

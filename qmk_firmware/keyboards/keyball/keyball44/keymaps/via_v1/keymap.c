@@ -23,16 +23,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // keymap for default (VIA)
     [0] = LAYOUT_universal(
-        KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_BSPC   ,
+        KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
         LT(3,KC_TAB), KC_A  , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT   ,
-        KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_DEL    ,
-                              LGUI(KC_Z), KC_LCTL , KC_LALT  , EN_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LGUI(KC_SLSH)
+        KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL    ,
+                              LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , BS_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LGUI(KC_SLSH)
     ),
 
     [1] = LAYOUT_universal(
         _______ ,  _______ ,  _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______   ,
-        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , KC_BTN1, MO(_NAV_LAYER), KC_BTN2, _______ ,
-        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , LCTL(KC_TAB), RCS(KC_TAB), _______ , _______ ,
+        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , KC_BTN1  , MO(_NAV_LAYER), KC_BTN2, _______ ,
+        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______ ,
                               _______  , _______  ,  _______ , _______ , _______ ,              _______ , _______ ,       _______       , _______  , _______
     ),
 
@@ -47,15 +47,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_GRV   , KC_1     , KC_2     , KC_3     , KC_4     , KC_5      ,                                       KC_6     , KC_7     , KC_8     , KC_9     , KC_0     , KC_BSPC   ,
         KC_TAB   , KC_EXLM  , KC_AT    , KC_HASH  , KC_DLR   , KC_PERC   ,                                       KC_LEFT  , KC_DOWN  , KC_UP    , KC_RIGHT , KC_LBRC  , KC_RBRC   ,
         KC_LSFT  , KC_QUES  , KC_AMPR  , KC_ASTR  , KC_MINS  , KC_UNDS   ,                                       KC_EQL   , KC_MINS  , KC_COMM  , KC_DOT   , KC_SLSH  , KC_BSLS   ,
-                              LGUI(KC_Z), KC_LCTL , KC_LALT  , EN_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LALT(KC_F)
+                              LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LALT(KC_F)
 
     ),
 
     [3] = LAYOUT_universal(
-        QK_BOOT ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
+        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
         _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
         _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
-                              _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,       _______       , _______  , _______
+                              _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,       _______       , _______  , QK_BOOT
     ),
 };
 // clang-format on
@@ -73,11 +73,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // };
 // uint16_t combo_size = ARRAY_SIZE(key_combos);
 
-// layer_state_t layer_state_set_user(layer_state_t state) {
-//     // Auto enable scroll mode when the highest layer is 3
-//     keyball_set_scroll_mode(get_highest_layer(state) == 3);
-//     return state;
-// }
+layer_state_t layer_state_set_user(layer_state_t state) {
+    // Auto enable scroll mode when the highest layer is 3
+    keyball_set_scroll_mode(get_highest_layer(state) == 3);
+    return state;
+}
 
 #ifdef OLED_ENABLE
 
