@@ -18,7 +18,7 @@ static mouse_action_active_state_t active_mouse_action =
     MOUSE_ACTION_STATE_NONE;                  // 0: なし, 1: RIGHT系アクション実行中, -1:
                                               // LEFT系アクション実行中　(このコメントは元の型の説明として残します)
 static uint16_t mouse_action_cooldown_timer;  // アクションのクールダウン用タイマー
-static const uint16_t MOUSE_ACTION_COOLDOWN_MS = 200;  // クールダウン時間(ms)、調整可能
+static const uint16_t MOUSE_ACTION_COOLDOWN_MS = 100;  // クールダウン時間(ms)、調整可能
 // 「ほぼ真横」判定のための係数。大きいほど、より真横に近い動きでないと反応しない
 //  例: 2 ならX軸の動きがY軸の2倍以上、3 なら3倍以上必要。
 static const int16_t HORIZONTAL_SENSITIVITY_FACTOR = 10;
@@ -99,15 +99,16 @@ static tap_hold_key_config_t en_lgui_config = {
 
 static tap_hold_key_config_t kc_lgui_config = {
     .state = {0},
-    .tap_keycode = KC_LNG2,  // ★追加：タップ時もKC_NO（ジェスチャーに専念）
-    .hold_target = KC_LGUI,  // ★追加：ホールド時もKC_NO（ジェスチャーに専念）
+    .tap_keycode = KC_LNG2,
+    .hold_target = KC_LGUI,
     .hold_type = HOLD_TYPE_KEYCODE,
 };
 
 static tap_hold_key_config_t kc_lalt_config = {
     .state = {0},
-    .tap_keycode = KC_LNG1,  // ★追加：タップ時もKC_NO（ジェスチャーに専念）
-    .hold_target = KC_LALT,  // ★追加：ホールド時もKC_NO（ジェスチャーに専念）
+    // .tap_keycode = KC_LNG1, // 日本語にする場合はコメントアウトを解除する
+    .tap_keycode = KC_MINS,
+    .hold_target = KC_LALT,
     .hold_type = HOLD_TYPE_KEYCODE,
 };
 
@@ -118,14 +119,6 @@ static tap_hold_key_config_t j_key_config = {
     .tap_keycode = KC_QUOT,          // タップで KC_QUOT (セミコロン) を送信
     .hold_target = KC_NO,            // ホールドでは特定のキーコードを送信しない (ジェスチャーのトリガーとしてのみ機能)
     .hold_type = HOLD_TYPE_KEYCODE,  // active_for_holdフラグを機能させるためにKEYCODEタイプを使用
-};
-
-// 'MINS_MO2'のタップ・ホールドキー設定 カスタムキーコード: 0x2
-static tap_hold_key_config_t mins_mo2_config = {
-    .state = {0},
-    .tap_keycode = KC_MINS,        // 短押しで - (マイナス/ハイフン) を送信
-    .hold_target = _JP_MO2_LAYER,  // 長押しで _LAYER2 を有効化
-    .hold_type = HOLD_TYPE_LAYER,  // ホールドでレイヤーを有効化するタイプ
 };
 
 // 'BS_MO2'のタップ・ホールドキー設定 カスタムキーコード: 0x2
@@ -480,8 +473,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;  // EN_LGUIの処理はここで完了
 
-        case MINS_MO2:
-            return process_tap_hold_key(&mins_mo2_config, record, other_key_pressed_while_tap_hold_pending);
+            // case MINS_MO2:
+            //     return process_tap_hold_key(&mins_mo2_config, record, other_key_pressed_while_tap_hold_pending);
 
         case BS_MO2:
             return process_tap_hold_key(&bs_mo2_config, record, other_key_pressed_while_tap_hold_pending);
@@ -529,7 +522,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 check_tap_hold_rollover(&j_key_config);
                 check_tap_hold_rollover(&kc_lgui_config);
                 check_tap_hold_rollover(&kc_lalt_config);
-                check_tap_hold_rollover(&mins_mo2_config);
+                // check_tap_hold_rollover(&mins_mo2_config);
                 check_tap_hold_rollover(&bs_mo2_config);
             }
             break;
@@ -547,7 +540,7 @@ void matrix_scan_user(void) {
     matrix_scan_tap_hold_key(&j_key_config);
     matrix_scan_tap_hold_key(&kc_lgui_config);
     matrix_scan_tap_hold_key(&kc_lalt_config);
-    matrix_scan_tap_hold_key(&mins_mo2_config);
+    // matrix_scan_tap_hold_key(&mins_mo2_config);
     matrix_scan_tap_hold_key(&bs_mo2_config);
 
     // --- Click State Handling (timer based) ---
