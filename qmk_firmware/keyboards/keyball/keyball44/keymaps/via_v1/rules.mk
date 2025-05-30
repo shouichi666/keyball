@@ -8,4 +8,4 @@ VIA_ENABLE = yes
 SRC += custom_features.c
 
 # COMBOを有効化
-COMBO_ENABLE = yes
+# COMBO_ENABLE = yes

@@ -46,6 +46,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // 188ms以内に離すとタップ、それ以降はホールドと判定される
 #define TAPPING_TERM 188
 
+// コンボの発動時間
+#define COMBO_TERM 50
+
 // 自動マウス移動機能を有効にする（QMKのポイントデバイス機能の一部）
 #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
 
