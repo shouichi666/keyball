@@ -53,7 +53,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [3] = LAYOUT_universal(
         _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
-        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
+        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , LSG(KC_LEFT) , LSG(KC_RIGHT), _______     , _______    , _______  ,
         _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
                               _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,       _______       , _______  , QK_BOOT
     ),
