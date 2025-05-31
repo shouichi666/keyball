@@ -20,13 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quantum.h"
 
 // clang-format off
+// make SKIP_GIT=yes keyball/keyball44:via_v1
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // keymap for default (VIA)
     [0] = LAYOUT_universal(
         KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_BSPC   ,
-        LT(3,KC_TAB), KC_A  , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT   ,
+        LT(4,KC_TAB), KC_A  , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , RSFT_T(KC_SCLN), KC_QUOT ,
         KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_DEL    ,
-                              LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LGUI(KC_SLSH)
+                              LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LGUI(KC_Z)
     ),
 
     [1] = LAYOUT_universal(
@@ -52,30 +53,35 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [3] = LAYOUT_universal(
-        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
-        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , LSG(KC_LEFT) , LSG(KC_RIGHT), _______     , _______    , _______  ,
-        _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         _______      , _______      , _______    , _______       , _______    , _______  ,
+        _______ ,  _______  , _______  , _______  , _______  , XXXXXXX   ,                                         _______      , _______      , _______    , _______     , _______  , _______  ,
+        _______ ,  _______  , _______  , _______  , _______  , XXXXXXX   ,                                         _______      , LAG(KC_LEFT) , LAG(KC_RIGHT), _______   , _______  , _______  ,
+        _______ ,  _______  , _______  , _______  , _______  , XXXXXXX   ,                                         _______      , _______      , _______    , _______     , _______  , _______  ,
                               _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,       _______       , _______  , QK_BOOT
+    ),
+
+    [4] = LAYOUT_universal(
+        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , KC_7      , KC_8   , KC_9     , KC_0      , _______  ,
+        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , KC_4      , KC_5   , KC_6     , KC_DOT    , _______  ,
+        _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         _______      , KC_1      , KC_2   , KC_3     , KC_COMM   , _______  ,
+                              _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_BSPC) , LALT(KC_BSPC) ,       _______       , _______  , QK_BOOT
     ),
 };
 // clang-format on
 
 // コンボで使用するキーコードの配列
-// const uint16_t PROGMEM combo_kl[] = {KC_K, KC_L, COMBO_END};
-// const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
-// const uint16_t PROGMEM combo_jl[] = {KC_J, KC_L, COMBO_END};
+const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
+const uint16_t PROGMEM combo_kl[] = {KC_K, KC_L, COMBO_END};
 
-// // コンボの定義
-// combo_t key_combos[] = {
-//     COMBO(combo_kl, KC_MINUS),  // KC_K と KC_L の同時押しで KC_MINUS を出力
-//     COMBO(combo_jk, KC_MINUS),  // KC_K と KC_L の同時押しで KC_MINUS を出力
-//     COMBO(combo_jl, KC_MINUS),  // KC_K と KC_L の同時押しで KC_MINUS を出力
-// };
-// uint16_t combo_size = ARRAY_SIZE(key_combos);
+// コンボの定義
+combo_t key_combos[] = {
+    COMBO(combo_jk, KC_BSPC),
+    COMBO(combo_kl, KC_MINS),
+};
+uint16_t combo_size = ARRAY_SIZE(key_combos);
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     // Auto enable scroll mode when the highest layer is 3
-    keyball_set_scroll_mode(get_highest_layer(state) == 3);
+    keyball_set_scroll_mode(get_highest_layer(state) >= 3);
     return state;
 }
 
