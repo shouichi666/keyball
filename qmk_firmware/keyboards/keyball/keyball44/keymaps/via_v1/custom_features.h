@@ -13,8 +13,8 @@ enum custom_keycodes {
 
 enum custom_layers {
     _BASE_LAYER = 0,  // _LAYER_0 から変更 (より一般的な名称に)
-    _CLICK_LAYER,     // _LAYER_1 (click_layerに対応するレイヤーとして命名)
-    _JP_MO2_LAYER,    // _LAYER_2 (JP_MO2ホールド時のレイヤー)
+    _JP_MO2_LAYER,    // _LAYER_1 (JP_MO2ホールド時のレイヤー)
+    _CLICK_LAYER,     // _LAYER_2 (click_layerに対応するレイヤーとして命名)
     _NAV_LAYER,       // _LAYER_3 (現状使われていないように見えるため)
 };
 

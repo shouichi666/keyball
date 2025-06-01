@@ -4,7 +4,6 @@
 
 // --- Gesture State Handling ---
 static bool is_j_key_tapped = false;
-// New: マウスジェスチャーの状態を示すためのEnum]
 typedef enum {
     MOUSE_ACTION_STATE_NONE = 0,         // 0: なし (元の0に相当)
     MOUSE_ACTION_STATE_FOR_LEFT_SWIPE,   // 左スワイプに対するアクション実行中 (元の1に相当: current_x < 0 の時)
@@ -249,14 +248,12 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         // Changed: Use m_key_tapped and j_key_config
         bool m_key_is_gesture_trigger = is_j_key_tapped || j_key_config.state.active_for_hold;
         bool en_lgui_is_gesture_trigger = en_lgui_config.state.key_pressed || en_lgui_config.state.active_for_hold;
-        bool kc_lgui_is_gesture_trigger = kc_lgui_config.state.key_pressed || kc_lgui_config.state.active_for_hold;
+        // bool kc_lgui_is_gesture_trigger = kc_lgui_config.state.key_pressed || kc_lgui_config.state.active_for_hold;
         bool kc_lalt_is_gesture_trigger =
             kc_lalt_config.state.key_pressed || kc_lalt_config.state.active_for_hold || is_j_key_tapped;
 
         // Modified: Check both triggers (EN_LGUI or KC_QUOT)
-        if (m_key_is_gesture_trigger || en_lgui_is_gesture_trigger || kc_lalt_is_gesture_trigger
-            // || kc_lgui_is_gesture_trigger     //
-        ) {
+        if (m_key_is_gesture_trigger || en_lgui_is_gesture_trigger || kc_lalt_is_gesture_trigger) {
             gesture_action_was_performed = true;
 
             if (active_mouse_action == MOUSE_ACTION_STATE_NONE &&
@@ -298,19 +295,6 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                             active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;
                             action_performed_in_this_cycle = true;
                         };
-                    }  // EN_LGUIホールド時の入力ソース切り替え
-                    else if (en_lgui_is_gesture_trigger
-                             // || kc_lgui_is_gesture_triggerを有効にするならコメントアウト解除
-                    ) {
-                        // if (current_x < 0) {  // 左スワイプでLANG2
-                        //     tap_code(KC_LNG2);
-                        //     active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
-                        //     action_performed_in_this_cycle = true;
-                        // } else if (current_x > 0) {  // 右スワイプでLANG1
-                        //     tap_code(KC_LNG1);
-                        //     active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;
-                        //     action_performed_in_this_cycle = true;
-                        // }
                     }
                 } else if (is_mostly_vertical) {
                     if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
@@ -329,19 +313,6 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                             active_mouse_action = MOUSE_ACTION_STATE_FOR_DOWN_SWIPE;
                             action_performed_in_this_cycle = true;
                         };
-                    }  // EN_LGUIホールド時の入力ソース切り替え
-                    else if (en_lgui_is_gesture_trigger
-                             // || kc_lgui_is_gesture_triggerを有効にするならコメントアウト解除
-                    ) {
-                        // if (current_y < 0) {  // 左スワイプでLANG2
-                        //     tap_code(KC_LNG2);
-                        //     active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
-                        //     action_performed_in_this_cycle = true;
-                        // } else if (current_y > 0) {  // 右スワイプでLANG1l
-                        //     tap_code(KC_LNG1);
-                        //     active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;
-                        //     action_performed_in_this_cycle = true;
-                        // }
                     }
                 }
 
@@ -354,8 +325,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 } else if ((active_mouse_action == MOUSE_ACTION_STATE_FOR_LEFT_SWIPE && current_x > 0) ||
                            (active_mouse_action == MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE && current_x < 0) ||
                            (active_mouse_action == MOUSE_ACTION_STATE_FOR_UP_SWIPE && current_y > 0) ||
-                           (active_mouse_action == MOUSE_ACTION_STATE_FOR_DOWN_SWIPE && current_y < 0) ||
-                           (!m_key_is_gesture_trigger && !en_lgui_is_gesture_trigger && !kc_lgui_is_gesture_trigger)) {
+                           (active_mouse_action == MOUSE_ACTION_STATE_FOR_DOWN_SWIPE && current_y < 0)) {
                     active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 }
             }
@@ -373,15 +343,15 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         switch (state) {
             case CLICKING:
                 // マウスボタンが離された際の処理は KC_QUOTY_BTN の
-                // process_record_user で行われるため、ここでは何もしない
+                // process_record_user で行われるため、ここでは何もしないkl
                 break;
             case CLICKABLE:
                 // [NOTE]：マウスのクリック操作以外をタップするとマウスレイヤーをOFFにするため以下をコメントアウトしている
                 // ---
                 // CLICKABLE状態で一定時間マウスの動きがなければレイヤーを無効化
-                // if (timer_elapsed(click_timer) > to_reset_time) {
-                //     disable_click_layer();
-                // }
+                if (timer_elapsed(click_timer) > to_reset_time) {
+                    disable_click_layer();
+                }
                 break;
             case WAITING:
                 if (timer_elapsed(click_timer) > 50) {
@@ -423,8 +393,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case KC_BTN1:
             case KC_BTN2:
             case MO(_NAV_LAYER):
-            case LCTL(KC_TAB):
-            case RCS(KC_TAB):
                 // マウスボタンや関連の修飾キーは何もしない
                 break;
             default:
@@ -464,7 +432,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return process_tap_hold_key(&jp_mo2_config, record, other_key_pressed_while_tap_hold_pending);
 
         case EN_LGUI:
-            // キーが押されたら、一旦タップホールド処理に渡す（状態更新のため）
             process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
 
             // EN_LGUIまたはKC_LGUIが押された瞬間にLGUIモディファイアを無効にする

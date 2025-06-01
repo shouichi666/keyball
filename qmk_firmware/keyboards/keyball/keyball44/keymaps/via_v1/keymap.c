@@ -11,7 +11,7 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
+''''
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -25,44 +25,36 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // keymap for default (VIA)
     [0] = LAYOUT_universal(
         KC_ESC   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_BSPC   ,
-        LT(4,KC_TAB), KC_A  , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , RSFT_T(KC_SCLN), KC_QUOT ,
-        KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_DEL    ,
+        LT(4,KC_TAB), KC_A  , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , MO(KC_L) , RSFT_T(KC_SCLN), KC_QUOT ,
+        KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_MINS   ,
                               LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LGUI(KC_Z)
     ),
 
     [1] = LAYOUT_universal(
+        KC_GRV   , KC_1     , KC_2     , KC_3     , KC_4     , KC_5      ,                                       KC_6     , KC_7     , KC_8     , KC_9     , KC_0     , KC_BSPC   ,
+        KC_MINS  , KC_EXLM  , KC_AT    , KC_HASH  , KC_DLR   , KC_PERC   ,                                       KC_LEFT  , KC_DOWN  , KC_UP    , KC_RIGHT , KC_LBRC  , KC_RBRC   ,
+        KC_LSFT  , KC_QUES  , KC_AMPR  , KC_ASTR  , KC_LCBR  , KC_RCBR   ,                                       KC_EQL   , KC_MINS  , KC_COMM  , KC_DOT   , KC_SLSH  , KC_BSLS   ,
+                              LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LALT(KC_F)
+    ),
+
+    [2] = LAYOUT_universal(
         _______ ,  _______ ,  _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______   ,
         _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , KC_BTN1  , MO(_NAV_LAYER), KC_BTN2, _______ ,
         _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______ ,
                               _______  , _______  ,  _______ , _______ , _______ ,              _______ , _______ ,       _______       , _______  , _______
     ),
 
-    // [1] = LAYOUT_universal(
-    //     _______ ,  _______  , _______  , _______  , _______  , _______  ,                                         _______  , _______  , _______  , _______  , _______ , _______   ,
-    //     _______ ,  _______  , _______  , _______  , _______  , _______  ,                                         _______  , _______  , _______  , KC_BTN1  , KC_BTN2 , MO(_NAV_LAYER),
-    //     _______ ,  _______  , _______  , _______  , _______  , _______  ,                                         _______  , _______  , _______  , _______  , _______ , _______   ,
-    //                           _______  , _______  ,  MO(_NAV_LAYER), _______ , _______ ,              _______ , _______ ,       _______       , _______  , _______
-    // ),
-
-    [2] = LAYOUT_universal(
-        KC_GRV   , KC_1     , KC_2     , KC_3     , KC_4     , KC_5      ,                                       KC_6     , KC_7     , KC_8     , KC_9     , KC_0     , KC_BSPC   ,
-        KC_TAB   , KC_EXLM  , KC_AT    , KC_HASH  , KC_DLR   , KC_PERC   ,                                       KC_LEFT  , KC_DOWN  , KC_UP    , KC_RIGHT , KC_LBRC  , KC_RBRC   ,
-        KC_LSFT  , KC_QUES  , KC_AMPR  , KC_ASTR  , KC_MINS  , KC_UNDS   ,                                       KC_EQL   , KC_MINS  , KC_COMM  , KC_DOT   , KC_SLSH  , KC_BSLS   ,
-                              LGUI(KC_Z), KC_LCTL , KC_LALT  , KC_LGUI , KC_SPC ,                       KC_ENT , JP_MO2 ,       RCTL_T(KC_LNG2) , KC_RALT  , LALT(KC_F)
-
-    ),
-
     [3] = LAYOUT_universal(
-        _______ ,  _______  , _______  , _______  , _______  , XXXXXXX   ,                                         _______      , _______      , _______    , _______     , _______  , _______  ,
-        _______ ,  _______  , _______  , _______  , _______  , XXXXXXX   ,                                         _______      , LAG(KC_LEFT) , LAG(KC_RIGHT), _______   , _______  , _______  ,
-        _______ ,  _______  , _______  , _______  , _______  , XXXXXXX   ,                                         _______      , _______      , _______    , _______     , _______  , _______  ,
+        _______ ,  _______  , _______  , _______  , _______  , _______   ,                                         _______      , _______      , _______    , _______     , _______  , _______  ,
+        _______ ,  _______  , _______  , _______  , _______  , _______   ,                                         _______      , LAG(KC_LEFT) , LAG(KC_RIGHT), _______   , _______  , _______  ,
+        _______ ,  _______  , _______  , _______  , _______  , _______   ,                                         _______      , _______      , _______    , _______     , _______  , _______  ,
                               _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,       _______       , _______  , QK_BOOT
     ),
 
     [4] = LAYOUT_universal(
-        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , XXXXXXX   ,                                         _______      , KC_7      , KC_8   , KC_9     , KC_0      , _______  ,
-        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , XXXXXXX   ,                                         _______      , KC_4      , KC_5   , KC_6     , KC_DOT    , _______  ,
-        _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , XXXXXXX   ,                                         _______      , KC_1      , KC_2   , KC_3     , KC_COMM   , _______  ,
+        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , _______   ,                                         _______      , KC_7      , KC_8   , KC_9     , KC_0      , _______  ,
+        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , LAG(KC_LEFT) ,                                         _______      , KC_4      , KC_5   , KC_6     , KC_DOT    , _______  ,
+        _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , LAG(KC_RIGHT),                                         _______      , KC_1      , KC_2   , KC_3     , KC_COMM   , _______  ,
                               _______  , _______  , _______  , _______ , _______ ,                       LGUI(KC_BSPC) , LALT(KC_BSPC) ,       _______       , _______  , QK_BOOT
     ),
 };
@@ -70,13 +62,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // コンボで使用するキーコードの配列
 const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
-const uint16_t PROGMEM combo_kl[] = {KC_K, KC_L, COMBO_END};
+const uint16_t PROGMEM combo_kl[] = {KC_K, RSFT_T(KC_SCLN), COMBO_END};
 
 // コンボの定義
-combo_t key_combos[] = {
-    COMBO(combo_jk, KC_BSPC),
-    COMBO(combo_kl, KC_MINS),
-};
+combo_t key_combos[] =
+    {
+        COMBO(combo_jk, KC_BSPC),
+        COMBO(combo_kl, KC_MINS),
+}
+
 uint16_t combo_size = ARRAY_SIZE(key_combos);
 
 layer_state_t layer_state_set_user(layer_state_t state) {
