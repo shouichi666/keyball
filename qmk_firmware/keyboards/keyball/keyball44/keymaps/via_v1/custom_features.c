@@ -3,7 +3,7 @@
 #include "timer.h"  // タイマー関数用
 
 // --- ジェスチャー状態管理 ---
-static bool is_j_key_tapped = false;  // 'j'キーのタップ状態
+static bool is_gesture_key_tapped = false;
 
 // --- 自動マウスレイヤー関係 ---
 static mouse_action_active_state_t active_mouse_action = MOUSE_ACTION_STATE_NONE;
@@ -30,13 +30,21 @@ static int16_t my_abs(int16_t num) { return num < 0 ? -num : num; }
 static bool other_key_pressed_while_tap_hold_pending = false;  // 他のキーが押されたフラグ
 
 // タップ・ホールドキー設定
+// 既存キー
+static tap_hold_key_config_t kc_lalt_config = {
+    .state = {0},
+    .tap_keycode = KC_ESC,
+    .hold_target = KC_LALT,
+    .hold_type = HOLD_TYPE_KEYCODE,
+};
+
+// カスタムキー
 static tap_hold_key_config_t jp_mo2_config = {
     .state = {0},
     .tap_keycode = KC_LNG1,
     .hold_target = _JP_MO2_LAYER,
     .hold_type = HOLD_TYPE_LAYER,
 };
-
 static tap_hold_key_config_t en_lgui_config = {
     .state = {0},
     .tap_keycode = KC_LNG2,
@@ -44,32 +52,12 @@ static tap_hold_key_config_t en_lgui_config = {
     .hold_type = HOLD_TYPE_KEYCODE,
 };
 
-static tap_hold_key_config_t kc_lgui_config = {
-    .state = {0},
-    .tap_keycode = KC_LNG2,
-    .hold_target = KC_LGUI,
-    .hold_type = HOLD_TYPE_KEYCODE,
-};
-
-static tap_hold_key_config_t kc_lalt_config = {
+// ジェスチャー関連
+static tap_hold_key_config_t g_key_config = {
     .state = {0},
     .tap_keycode = KC_BTN1,
-    .hold_target = KC_LALT,
-    .hold_type = HOLD_TYPE_KEYCODE,
-};
-
-static tap_hold_key_config_t j_key_config = {
-    .state = {0},
-    .tap_keycode = KC_QUOT,
     .hold_target = KC_NO,
     .hold_type = HOLD_TYPE_KEYCODE,
-};
-
-static tap_hold_key_config_t bs_mo2_config = {
-    .state = {0},
-    .tap_keycode = KC_BSPC,
-    .hold_target = _JP_MO2_LAYER,
-    .hold_type = HOLD_TYPE_LAYER,
 };
 
 // ホールドアクション有効化
@@ -100,8 +88,7 @@ static void deactivate_hold_action(tap_hold_key_config_t *config) {
 // タップアクション実行
 static void perform_tap_action(tap_hold_key_config_t *config) {
     if (config->tap_keycode != KC_NO) {
-        register_code(config->tap_keycode);
-        unregister_code(config->tap_keycode);
+        tap_code(config->tap_keycode);
     }
     config->state.tap_action_done = true;
 }
@@ -120,6 +107,9 @@ static bool process_tap_hold_key(tap_hold_key_config_t *config,
         if (config->state.active_for_hold) {
             deactivate_hold_action(config);
         } else if (!config->state.tap_action_done) {
+            // ホールドされておらず、かつタップアクションがまだ実行されていない場合
+            // (TAPPING_TERM 以内に離された場合。matrix_scan_userでホールド判定される前)
+            // other_key_pressed_while_tap_hold_pending は、このキーを離す前に他のキーが押されたかを見る
             if (timer_elapsed(config->state.timer) < TAPPING_TERM && !is_other_key_pressed_for_tap) {
                 perform_tap_action(config);
             }
@@ -173,11 +163,16 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         }
 
         // ジェスチャー有効トリガー判定
-        bool m_key_is_gesture_trigger = is_j_key_tapped || j_key_config.state.active_for_hold;
-        bool en_lgui_is_gesture_trigger = en_lgui_config.state.key_pressed || en_lgui_config.state.active_for_hold;
-        bool kc_lalt_is_gesture_trigger = kc_lalt_config.state.key_pressed || kc_lalt_config.state.active_for_hold;
+        bool m_key_is_gesture_trigger = is_gesture_key_tapped;
+        bool kc_lalt_is_gesture_trigger =
+            kc_lalt_config.state.key_pressed || kc_lalt_config.state.active_for_hold || is_gesture_key_tapped;
+        // ||                                           //
+        // g_key_config.state.active_for_hold ||   //
+        // g_key_config.state.key_pressed ||       //
+        // g_key_config.state.active_for_hold ||  //
+        // g_key_config.state.key_pressed;        //
 
-        if (m_key_is_gesture_trigger || en_lgui_is_gesture_trigger || kc_lalt_is_gesture_trigger) {
+        if (m_key_is_gesture_trigger) {
             gesture_action_was_performed = true;
 
             if (active_mouse_action == MOUSE_ACTION_STATE_NONE &&
@@ -201,40 +196,36 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 }
 
                 if (is_mostly_horizontal) {
-                    if (m_key_is_gesture_trigger || kc_lalt_is_gesture_trigger) {
-                        if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
+                    if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
 
-                        if (current_x < 0) {
-                            register_code(KC_LCTL);
-                            tap_code(KC_RIGHT);
-                            unregister_code(KC_LCTL);
-                            active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
-                            action_performed_in_this_cycle = true;
-                        } else if (current_x > 0) {
-                            register_code(KC_LCTL);
-                            tap_code(KC_LEFT);
-                            unregister_code(KC_LCTL);
-                            active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;
-                            action_performed_in_this_cycle = true;
-                        }
+                    if (current_x < 0) {
+                        register_code(KC_LCTL);
+                        tap_code(KC_RIGHT);
+                        unregister_code(KC_LCTL);
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
+                        action_performed_in_this_cycle = true;
+                    } else if (current_x > 0) {
+                        register_code(KC_LCTL);
+                        tap_code(KC_LEFT);
+                        unregister_code(KC_LCTL);
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;
+                        action_performed_in_this_cycle = true;
                     }
                 } else if (is_mostly_vertical) {
                     if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
 
-                    if (m_key_is_gesture_trigger || kc_lalt_is_gesture_trigger) {
-                        if (current_y > 0) {
-                            register_code(KC_LCTL);
-                            tap_code(KC_UP);
-                            unregister_code(KC_LCTL);
-                            active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;
-                            action_performed_in_this_cycle = true;
-                        } else if (current_y < 0) {
-                            register_code(KC_LCTL);
-                            tap_code(KC_DOWN);
-                            unregister_code(KC_LCTL);
-                            active_mouse_action = MOUSE_ACTION_STATE_FOR_DOWN_SWIPE;
-                            action_performed_in_this_cycle = true;
-                        }
+                    if (current_y > 0) {
+                        register_code(KC_LCTL);
+                        tap_code(KC_UP);
+                        unregister_code(KC_LCTL);
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;
+                        action_performed_in_this_cycle = true;
+                    } else if (current_y < 0) {
+                        register_code(KC_LCTL);
+                        tap_code(KC_DOWN);
+                        unregister_code(KC_LCTL);
+                        active_mouse_action = MOUSE_ACTION_STATE_FOR_DOWN_SWIPE;
+                        action_performed_in_this_cycle = true;
                     }
                 }
 
@@ -250,33 +241,35 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                     active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 } else if (current_x == 0 && current_y == 0) {  // 動きが止まったらリセット
                     active_mouse_action = MOUSE_ACTION_STATE_NONE;
+                    mouse_action_cooldown_timer = timer_read();
                 }
             }
         } else {  // ジェスチャートリガーが押されていない場合
             if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
+                mouse_movement_accumulator = 0;
+            } else {  // マウスが動いていない場合
+                if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
+                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
+                    mouse_action_cooldown_timer = timer_read();
+                }
+                switch (state) {
+                    case CLICKABLE:
+                        if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {  // 定数を使用
+                            // disable_click_layer(); // process_record_userで制御のためコメントアウト
+                        }
+                        break;
+                    case WAITING:
+                        if (timer_elapsed(click_timer) > 50) {  // この50msも定数化を検討しても良いでしょう
+                            mouse_movement_accumulator = 0;
+                            state = NONE;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
-        }
-    } else {  // マウスが動いていない場合
-        if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
-            active_mouse_action = MOUSE_ACTION_STATE_NONE;
-            mouse_action_cooldown_timer = timer_read();
-        }
-        switch (state) {
-            case CLICKABLE:
-                if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {  // 定数を使用
-                    // disable_click_layer(); // process_record_userで制御のためコメントアウト
-                }
-                break;
-            case WAITING:
-                if (timer_elapsed(click_timer) > 50) {  // この50msも定数化を検討しても良いでしょう
-                    mouse_movement_accumulator = 0;
-                    state = NONE;
-                }
-                break;
-            default:
-                break;
         }
     }
 
@@ -289,7 +282,6 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         report_to_send.v = 0;
         report_to_send.h = 0;
     }
-
     return report_to_send;
 }
 
@@ -338,52 +330,42 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return process_tap_hold_key(&jp_mo2_config, record, other_key_pressed_while_tap_hold_pending);
 
         case EN_LGUI:
-            process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
-            if (record->event.pressed) {
-                unregister_mods(MOD_LGUI);  // 押下時にLGUIモディファイアを無効化
-            }
-            return false;
+            return process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
 
-        case BS_MO2:
-            return process_tap_hold_key(&bs_mo2_config, record, other_key_pressed_while_tap_hold_pending);
-
-        case KC_QUOT:
+        case GESTURE:
             if (record->event.pressed) {
-                is_j_key_tapped = true;
                 // クールダウンを即時解除して次のジェスチャーを可能にする
-                mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // 定数を使用
+                is_gesture_key_tapped = true;
+                mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;
             } else {
-                is_j_key_tapped = false;
+                is_gesture_key_tapped = false;
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
             }
-            return process_tap_hold_key(&j_key_config, record, other_key_pressed_while_tap_hold_pending);
+            return process_tap_hold_key(&g_key_config, record, other_key_pressed_while_tap_hold_pending);
 
         case KC_LALT:
             if (record->event.pressed) {
-                is_j_key_tapped = true;  // ジェスチャートリガーとして'j'キーと同じフラグを使用
-                mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // 定数を使用
+                // クールダウンを即時解除して次のジェスチャーを可能にする
+                is_gesture_key_tapped = true;
+                mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;
             } else {
-                is_j_key_tapped = false;
+                is_gesture_key_tapped = false;
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
             }
             return process_tap_hold_key(&kc_lalt_config, record, other_key_pressed_while_tap_hold_pending);
 
-        case KC_LGUI:
-            process_tap_hold_key(&kc_lgui_config, record, other_key_pressed_while_tap_hold_pending);
-            return false;
-
         default:
             // 他のキーが押されたらロールオーバー処理
             if (record->event.pressed) {
                 other_key_pressed_while_tap_hold_pending = true;
+
                 check_tap_hold_rollover(&jp_mo2_config);
                 check_tap_hold_rollover(&en_lgui_config);
-                check_tap_hold_rollover(&j_key_config);
-                check_tap_hold_rollover(&kc_lgui_config);
+                check_tap_hold_rollover(&g_key_config);
                 check_tap_hold_rollover(&kc_lalt_config);
-                check_tap_hold_rollover(&bs_mo2_config);
+                check_tap_hold_rollover(&g_key_config);
             }
             break;
     }
@@ -395,10 +377,9 @@ void matrix_scan_user(void) {
     // 各タップ・ホールドキーのホールド判定
     matrix_scan_tap_hold_key(&jp_mo2_config);
     matrix_scan_tap_hold_key(&en_lgui_config);
-    matrix_scan_tap_hold_key(&j_key_config);
-    matrix_scan_tap_hold_key(&kc_lgui_config);
+    matrix_scan_tap_hold_key(&g_key_config);
     matrix_scan_tap_hold_key(&kc_lalt_config);
-    matrix_scan_tap_hold_key(&bs_mo2_config);
+    matrix_scan_tap_hold_key(&g_key_config);
 
     // CLICKABLE状態のタイムアウト処理 (process_record_user で制御されるためコメントアウト)
     // if (state == CLICKABLE && timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) { // 定数を使用
