@@ -37,6 +37,12 @@ static tap_hold_key_config_t kc_lalt_config = {
     .hold_target = KC_LALT,
     .hold_type = HOLD_TYPE_KEYCODE,
 };
+static tap_hold_key_config_t kc_lctrl_config = {
+    .state = {0},
+    .tap_keycode = KC_TAB,
+    .hold_target = KC_LCTL,
+    .hold_type = HOLD_TYPE_KEYCODE,
+};
 
 // カスタムキー
 static tap_hold_key_config_t jp_mo2_config = {
@@ -166,11 +172,8 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         bool m_key_is_gesture_trigger = is_gesture_key_tapped;
         bool kc_lalt_is_gesture_trigger =
             kc_lalt_config.state.key_pressed || kc_lalt_config.state.active_for_hold || is_gesture_key_tapped;
-        // ||                                           //
-        // g_key_config.state.active_for_hold ||   //
-        // g_key_config.state.key_pressed ||       //
-        // g_key_config.state.active_for_hold ||  //
-        // g_key_config.state.key_pressed;        //
+        bool g_is_gesture_trigger =
+            g_key_config.state.key_pressed || g_key_config.state.active_for_hold || is_gesture_key_tapped;
 
         if (m_key_is_gesture_trigger) {
             gesture_action_was_performed = true;
@@ -198,6 +201,10 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 if (is_mostly_horizontal) {
                     if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
 
+                    if (g_is_gesture_trigger) {
+                        /* nope */
+                    }
+
                     if (current_x < 0) {
                         register_code(KC_LCTL);
                         tap_code(KC_RIGHT);
@@ -214,15 +221,18 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 } else if (is_mostly_vertical) {
                     if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
 
+                    if (g_is_gesture_trigger) { /* nope */
+                    }
+
                     if (current_y > 0) {
                         register_code(KC_LCTL);
-                        tap_code(KC_UP);
+                        tap_code(KC_DOWN);
                         unregister_code(KC_LCTL);
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;
                         action_performed_in_this_cycle = true;
                     } else if (current_y < 0) {
                         register_code(KC_LCTL);
-                        tap_code(KC_DOWN);
+                        tap_code(KC_UP);
                         unregister_code(KC_LCTL);
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_DOWN_SWIPE;
                         action_performed_in_this_cycle = true;
@@ -231,6 +241,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
                 if (action_performed_in_this_cycle) {
                     mouse_action_cooldown_timer = timer_read();
+                    mouse_movement_accumulator = 0;
                 }
             } else if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
                 // ジェスチャー方向と逆の動きを検出したらリセット
@@ -242,6 +253,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 } else if (current_x == 0 && current_y == 0) {  // 動きが止まったらリセット
                     active_mouse_action = MOUSE_ACTION_STATE_NONE;
                     mouse_action_cooldown_timer = timer_read();
+                    mouse_movement_accumulator = 0;
                 }
             }
         } else {  // ジェスチャートリガーが押されていない場合
@@ -330,7 +342,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return process_tap_hold_key(&jp_mo2_config, record, other_key_pressed_while_tap_hold_pending);
 
         case EN_LGUI:
-            return process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
+            process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
+            if (record->event.pressed) {
+                unregister_mods(MOD_LGUI);
+            }
+            return false;
 
         case GESTURE:
             if (record->event.pressed) {
@@ -341,8 +357,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 is_gesture_key_tapped = false;
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
+                mouse_movement_accumulator = 0;
             }
             return process_tap_hold_key(&g_key_config, record, other_key_pressed_while_tap_hold_pending);
+
+        case KC_LCTL:
+            return process_tap_hold_key(&kc_lctrl_config, record, other_key_pressed_while_tap_hold_pending);
 
         case KC_LALT:
             if (record->event.pressed) {
@@ -353,6 +373,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 is_gesture_key_tapped = false;
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
+                mouse_movement_accumulator = 0;
             }
             return process_tap_hold_key(&kc_lalt_config, record, other_key_pressed_while_tap_hold_pending);
 
@@ -365,7 +386,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 check_tap_hold_rollover(&en_lgui_config);
                 check_tap_hold_rollover(&g_key_config);
                 check_tap_hold_rollover(&kc_lalt_config);
-                check_tap_hold_rollover(&g_key_config);
+                check_tap_hold_rollover(&kc_lctrl_config);
             }
             break;
     }
@@ -379,7 +400,7 @@ void matrix_scan_user(void) {
     matrix_scan_tap_hold_key(&en_lgui_config);
     matrix_scan_tap_hold_key(&g_key_config);
     matrix_scan_tap_hold_key(&kc_lalt_config);
-    matrix_scan_tap_hold_key(&g_key_config);
+    matrix_scan_tap_hold_key(&kc_lctrl_config);
 
     // CLICKABLE状態のタイムアウト処理 (process_record_user で制御されるためコメントアウト)
     // if (state == CLICKABLE && timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) { // 定数を使用

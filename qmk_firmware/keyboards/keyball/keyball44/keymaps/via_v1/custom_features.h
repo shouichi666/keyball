@@ -4,7 +4,7 @@
 #include QMK_KEYBOARD_H  // QMKの主要な定義をインクルード (report_mouse_t, keyrecord_t など)
 
 // --- 設定可能な定数 ---
-#define MOUSE_ACTION_COOLDOWN_MS 180
+#define MOUSE_ACTION_COOLDOWN_MS 150
 #define HORIZONTAL_SENSITIVITY_FACTOR 8
 #define VERTICAL_SENSITIVITY_FACTOR 8
 #define CLICKABLE_RESET_TIME 800  // to_reset_timeをより分かりやすい名前に変更

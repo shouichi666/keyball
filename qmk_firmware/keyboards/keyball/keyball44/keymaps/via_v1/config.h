@@ -20,19 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// #ifdef RGBLIGHT_ENABLE
-// // #    define RGBLIGHT_EFFECT_BREATHING
-// // #    define RGBLIGHT_EFFECT_RAINBOW_MOOD
-// // #    define RGBLIGHT_EFFECT_RAINBOW_SWIRL
-// // #    define RGBLIGHT_EFFECT_SNAKE
-// // #    define RGBLIGHT_EFFECT_KNIGHT
-// // #    define RGBLIGHT_EFFECT_CHRISTMAS
-// #define RGBLIGHT_EFFECT_STATIC_GRADIENT
-// // #    define RGBLIGHT_EFFECT_RGB_TEST
-// // #    define RGBLIGHT_EFFECT_ALTERNATING
-// // #    define RGBLIGHT_EFFECT_TWINKLE
-// #endif
-
 // キーコードを送信する際のディレイ（ミリ秒単位）
 #define TAP_CODE_DELAY 0
 
@@ -44,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define NO_TAPPING_FORCE_HOLD
 
 // タップとホールドの判定において、次のキー入力があった場合はホールドと判定する（早めにホールドを有効にする）
-#define PERMISSIVE_HOLD
+// #define PERMISSIVE_HOLD
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 // 188ms以内に離すとタップ、それ以降はホールドと判定される
@@ -58,9 +45,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // 自動マウス機能を有効にするレイヤーを指定（1番レイヤーが対象になる）
 #define AUTO_MOUSE_DEFAULT_LAYER 2
-
-// 光学センサーPMW3360DM の解像度 (CPI) の規定値
-// #define KEYBALL_CPI_DEFAULT 770
 
 // レイヤーの数を設定
 #define DYNAMIC_KEYMAP_LAYER_COUNT 5
