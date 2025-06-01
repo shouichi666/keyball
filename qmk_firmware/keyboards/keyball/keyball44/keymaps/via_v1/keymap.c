@@ -65,11 +65,10 @@ const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
 const uint16_t PROGMEM combo_kl[] = {KC_K, RSFT_T(KC_SCLN), COMBO_END};
 
 // コンボの定義
-combo_t key_combos[] =
-    {
-        COMBO(combo_jk, KC_BSPC),
-        COMBO(combo_kl, KC_MINS),
-}
+combo_t key_combos[] = {
+    COMBO(combo_jk, KC_BSPC),
+    COMBO(combo_kl, KC_MINS),
+};
 
 uint16_t combo_size = ARRAY_SIZE(key_combos);
 
