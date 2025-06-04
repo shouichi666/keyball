@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define NO_TAPPING_FORCE_HOLD
 
 // タップとホールドの判定において、次のキー入力があった場合はホールドと判定する（早めにホールドを有効にする）
-// #define PERMISSIVE_H
+#define PERMISSIVE_H
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 // 188ms以内に離すとタップ、それ以降はホールドと判定される

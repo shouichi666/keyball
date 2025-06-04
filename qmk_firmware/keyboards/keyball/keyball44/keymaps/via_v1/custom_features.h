@@ -4,9 +4,9 @@
 #include QMK_KEYBOARD_H  // QMKの主要な定義をインクルード (report_mouse_t, keyrecord_t など)
 
 // --- 設定可能な定数 ---
-#define MOUSE_ACTION_COOLDOWN_MS 150
-#define HORIZONTAL_SENSITIVITY_FACTOR 8
-#define VERTICAL_SENSITIVITY_FACTOR 8
+#define MOUSE_ACTION_COOLDOWN_MS 140
+#define HORIZONTAL_SENSITIVITY_FACTOR 2
+#define VERTICAL_SENSITIVITY_FACTOR 2
 #define CLICKABLE_RESET_TIME 800  // to_reset_timeをより分かりやすい名前に変更
 #define CLICKABLE_MIN_MOVEMENT 0  // to_clickable_movementをより分かりやすい名前に変更
 
@@ -49,7 +49,7 @@ typedef enum {
     HOLD_TYPE_KEYCODE,
 } hold_action_type_t;
 
-// --- タップ・ホールドの状態管理用構造体 ---
+// --- タップ・ホールドの状態管理用構造体 ---k
 typedef struct {
     bool key_pressed;      // キーが物理的に押されているか
     bool active_for_hold;  // ホールドアクションが有効になっているか

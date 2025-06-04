@@ -142,12 +142,20 @@ static void matrix_scan_tap_hold_key(tap_hold_key_config_t *config) {
     }
 }
 
+// static変数に追加
+static int16_t gesture_x_accumulator = 0;
+static int16_t gesture_y_accumulator = 0;
+
 // ポインティングデバイスのタスク
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     int16_t current_x = mouse_report.x;
     int16_t current_y = mouse_report.y;
     report_mouse_t report_to_send = mouse_report;
     bool gesture_action_was_performed = false;
+
+    // ジェスチャー用アキュムレータに現在の動きを加算
+    gesture_x_accumulator += current_x;
+    gesture_y_accumulator += current_y;
 
     if (current_x != 0 || current_y != 0) {
         switch (state) {
@@ -175,6 +183,18 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         bool g_is_gesture_trigger =
             g_key_config.state.key_pressed || g_key_config.state.active_for_hold || is_gesture_key_tapped;
 
+        // ジェスチャートリガーが有効な場合のみ、ジェスチャー用アキュムレータに現在の動きを加算
+        if (m_key_is_gesture_trigger || kc_lalt_is_gesture_trigger || g_is_gesture_trigger) {
+            gesture_x_accumulator += current_x;
+            gesture_y_accumulator += current_y;
+        } else {
+            // ジェスチャートリガーキーがどれも押されていない場合、アキュムレータをクリア
+            // これにより、不必要な蓄積を防ぎ、次のジェスチャーの開始時にクリーンな状態を保証
+            gesture_x_accumulator = 0;
+            gesture_y_accumulator = 0;
+            active_mouse_action = MOUSE_ACTION_STATE_NONE;  // ジェスチャー状態もリセット
+        }
+
         if (m_key_is_gesture_trigger) {
             gesture_action_was_performed = true;
 
@@ -184,16 +204,14 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 bool is_mostly_horizontal = false;
                 bool is_mostly_vertical = false;
 
-                if (current_x != 0) {
-                    if (current_y == 0 ||
-                        my_abs(current_x) > my_abs(current_y) * HORIZONTAL_SENSITIVITY_FACTOR) {  // 定数を使用
-                        is_mostly_horizontal = true;
-                    }
-                }
+                // 累積された移動量で方向を判定
+                int16_t abs_acc_x = my_abs(gesture_x_accumulator);
+                int16_t abs_acc_y = my_abs(gesture_y_accumulator);
 
-                if (!is_mostly_horizontal && current_y != 0) {
-                    if (current_x == 0 ||
-                        my_abs(current_y) > my_abs(current_x) * VERTICAL_SENSITIVITY_FACTOR) {  // 定数を使用
+                if (abs_acc_x > 0 || abs_acc_y > 0) {  // 何らかの動きがある場合にのみチェック
+                    if (abs_acc_x > abs_acc_y * HORIZONTAL_SENSITIVITY_FACTOR) {  // 定数を使用
+                        is_mostly_horizontal = true;
+                    } else if (abs_acc_y > abs_acc_x * VERTICAL_SENSITIVITY_FACTOR) {  // 定数を使用
                         is_mostly_vertical = true;
                     }
                 }
@@ -205,13 +223,14 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                         /* nope */
                     }
 
-                    if (current_x < 0) {
+                    // 累積されたX方向の動きで方向を決定
+                    if (gesture_x_accumulator < 0) {
                         register_code(KC_LCTL);
                         tap_code(KC_RIGHT);
                         unregister_code(KC_LCTL);
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
                         action_performed_in_this_cycle = true;
-                    } else if (current_x > 0) {
+                    } else if (gesture_x_accumulator > 0) {
                         register_code(KC_LCTL);
                         tap_code(KC_LEFT);
                         unregister_code(KC_LCTL);
@@ -221,16 +240,18 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 } else if (is_mostly_vertical) {
                     if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
 
-                    if (g_is_gesture_trigger) { /* nope */
+                    if (g_is_gesture_trigger) {
+                        /* nope */
                     }
 
-                    if (current_y > 0) {
+                    // 累積されたY方向の動きで方向を決定
+                    if (gesture_y_accumulator > 0) {
                         register_code(KC_LCTL);
                         tap_code(KC_DOWN);
                         unregister_code(KC_LCTL);
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;
                         action_performed_in_this_cycle = true;
-                    } else if (current_y < 0) {
+                    } else if (gesture_y_accumulator < 0) {
                         register_code(KC_LCTL);
                         tap_code(KC_UP);
                         unregister_code(KC_LCTL);
@@ -241,47 +262,70 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
                 if (action_performed_in_this_cycle) {
                     mouse_action_cooldown_timer = timer_read();
-                    mouse_movement_accumulator = 0;
+                    gesture_x_accumulator = 0;  // アクション実行後にリセット
+                    gesture_y_accumulator = 0;  // アクション実行後にリセット
+                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 }
             } else if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
-                // ジェスチャー方向と逆の動きを検出したらリセット
+                // ジェスチャー方向と逆の動きを検出したらリセット、または動きが止まったらリセット
                 if ((active_mouse_action == MOUSE_ACTION_STATE_FOR_LEFT_SWIPE && current_x > 0) ||
                     (active_mouse_action == MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE && current_x < 0) ||
                     (active_mouse_action == MOUSE_ACTION_STATE_FOR_UP_SWIPE && current_y > 0) ||
-                    (active_mouse_action == MOUSE_ACTION_STATE_FOR_DOWN_SWIPE && current_y < 0)) {
-                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
-                } else if (current_x == 0 && current_y == 0) {  // 動きが止まったらリセット
+                    (active_mouse_action == MOUSE_ACTION_STATE_FOR_DOWN_SWIPE && current_y < 0) ||
+                    (current_x == 0 && current_y == 0)) {
                     active_mouse_action = MOUSE_ACTION_STATE_NONE;
                     mouse_action_cooldown_timer = timer_read();
-                    mouse_movement_accumulator = 0;
+                    gesture_x_accumulator = 0;  // リセット
+                    gesture_y_accumulator = 0;  // リセット
                 }
             }
         } else {  // ジェスチャートリガーが押されていない場合
-            if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
+            // ジェスチャートリガーが離されたら状態をリセット
+            if (active_mouse_action != MOUSE_ACTION_STATE_NONE || gesture_x_accumulator != 0 ||
+                gesture_y_accumulator != 0) {
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
-                mouse_movement_accumulator = 0;
-            } else {  // マウスが動いていない場合
-                if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
-                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
-                    mouse_action_cooldown_timer = timer_read();
-                }
-                switch (state) {
-                    case CLICKABLE:
-                        if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {  // 定数を使用
-                            // disable_click_layer(); // process_record_userで制御のためコメントアウト
-                        }
-                        break;
-                    case WAITING:
-                        if (timer_elapsed(click_timer) > 50) {  // この50msも定数化を検討しても良いでしょう
-                            mouse_movement_accumulator = 0;
-                            state = NONE;
-                        }
-                        break;
-                    default:
-                        break;
-                }
+                gesture_x_accumulator = 0;  // リセット
+                gesture_y_accumulator = 0;  // リセット
             }
+            // マウスが動いていない場合のクリック状態の処理
+            switch (state) {
+                case CLICKABLE:
+                    if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {  // 定数を使用
+                        // disable_click_layer(); // process_record_userで制御のためコメントアウト
+                    }
+                    break;
+                case WAITING:
+                    if (timer_elapsed(click_timer) > 50) {  // この50msも定数化を検討しても良いでしょう
+                        mouse_movement_accumulator = 0;
+                        state = NONE;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    } else {  // マウスが動いていない場合（current_xもcurrent_yも0）
+        // ジェスチャーのアキュムレータをリセット
+        if (gesture_x_accumulator != 0 || gesture_y_accumulator != 0) {
+            gesture_x_accumulator = 0;
+            gesture_y_accumulator = 0;
+        }
+        // マウスが動いていない場合のクリック状態の処理
+        switch (state) {
+            case CLICKABLE:
+                if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {  // 定数を使用
+                    // disable_click_layer(); // process_record_userで制御のためコメントアウト
+                }
+                break;
+            case WAITING:
+                if (timer_elapsed(click_timer) > 50) {  // この50msも定数化を検討しても良いでしょう
+                    mouse_movement_accumulator = 0;
+                    state = NONE;
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -353,11 +397,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // クールダウンを即時解除して次のジェスチャーを可能にする
                 is_gesture_key_tapped = true;
                 mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;
+                gesture_x_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
+                gesture_y_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
+                active_mouse_action = MOUSE_ACTION_STATE_NONE;
             } else {
                 is_gesture_key_tapped = false;
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
                 mouse_movement_accumulator = 0;
+                gesture_x_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
+                gesture_y_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
             }
             return process_tap_hold_key(&g_key_config, record, other_key_pressed_while_tap_hold_pending);
 
@@ -369,11 +418,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // クールダウンを即時解除して次のジェスチャーを可能にする
                 is_gesture_key_tapped = true;
                 mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;
+                gesture_x_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
+                gesture_y_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
+                active_mouse_action = MOUSE_ACTION_STATE_NONE;
             } else {
                 is_gesture_key_tapped = false;
                 active_mouse_action = MOUSE_ACTION_STATE_NONE;
                 mouse_action_cooldown_timer = timer_read();
                 mouse_movement_accumulator = 0;
+                gesture_x_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
+                gesture_y_accumulator = 0;  // ジェスチャー用アキュムレータもリセット
             }
             return process_tap_hold_key(&kc_lalt_config, record, other_key_pressed_while_tap_hold_pending);
 
