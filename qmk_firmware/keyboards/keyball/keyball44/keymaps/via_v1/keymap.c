@@ -44,8 +44,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [3] = LAYOUT_universal(
-        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , _______      ,                                    _______  , _______     , _______    , _______    , _______  , _______  ,
-        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , LAG(KC_LEFT) ,                                    _______  , LAG(KC_LEFT), LAG(KC_RIGHT), _______  , _______  , _______  ,
+        _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , _______      ,                                    _______  , _______     , _______    , _______    , _______  , LGUI(KC_W)  ,
+        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , LAG(KC_LEFT) ,                                    LAG(KC_LEFT), LAG(KC_LEFT), LAG(KC_RIGHT), _______  , _______  , LGUI(KC_LEFT)  ,
         _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , LAG(KC_RIGHT),                                    _______  , _______     , _______    , _______    , _______  , _______  ,
                               QK_BOOT  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,          _______      , _______  , _______
     ),
@@ -61,12 +61,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // コンボで使用するキーコードの配
 const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
-const uint16_t PROGMEM combo_kl[] = {KC_K, RSFT_T(KC_SCLN), COMBO_END};
+const uint16_t PROGMEM combo_fd[] = {KC_F, KC_D, COMBO_END};
+const uint16_t PROGMEM combo_sp[] = {EN_LGUI, JP_MO2, COMBO_END};
 
 // コンボの定義
 combo_t key_combos[] = {
-    COMBO(combo_jk, KC_BSPC),
-    COMBO(combo_kl, KC_MINS),
+    COMBO(combo_jk, MO(4)),
+    COMBO(combo_fd, MO(4)),
+    COMBO(combo_sp, MO(3)),
 };
 
 uint16_t combo_size = ARRAY_SIZE(key_combos);

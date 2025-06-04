@@ -31,14 +31,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define NO_TAPPING_FORCE_HOLD
 
 // タップとホールドの判定において、次のキー入力があった場合はホールドと判定する（早めにホールドを有効にする）
-// #define PERMISSIVE_HOLD
+// #define PERMISSIVE_H
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 // 188ms以内に離すとタップ、それ以降はホールドと判定される
-#define TAPPING_TERM 180
+#define TAPPING_TERM 175
 
 // コンボの発動時間
-#define COMBO_TERM 40
+#define COMBO_TERM 35
 
 // 自動マウス移動機能を有効にする（QMKのポイントデバイス機能の一部）
 #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
