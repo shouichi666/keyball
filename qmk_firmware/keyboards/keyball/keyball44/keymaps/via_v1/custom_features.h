@@ -4,11 +4,12 @@
 #include QMK_KEYBOARD_H  // QMKの主要な定義をインクルード (report_mouse_t, keyrecord_t など)
 
 // --- 設定可能な定数 ---
-#define MOUSE_ACTION_COOLDOWN_MS 140
+#define GESTURE_MIN_ACCUMULATED_MOVEMENT 65
+#define MOUSE_ACTION_COOLDOWN_MS 100
 #define HORIZONTAL_SENSITIVITY_FACTOR 2
 #define VERTICAL_SENSITIVITY_FACTOR 2
-#define CLICKABLE_RESET_TIME 800  // to_reset_timeをより分かりやすい名前に変更
-#define CLICKABLE_MIN_MOVEMENT 0  // to_clickable_movementをより分かりやすい名前に変更
+#define CLICKABLE_RESET_TIME 800   // to_reset_timeをより分かりやすい名前に変更
+#define CLICKABLE_MIN_MOVEMENT 5  // to_clickable_movementをより分かりやすい名前に変更
 
 // 独自のキー
 enum custom_keycodes {
@@ -17,7 +18,7 @@ enum custom_keycodes {
     GESTURE,
 };
 
-// レイヤー
+// レイヤーj
 enum custom_layers {
     _BASE_LAYER = 0,  // _LAYER_0
     _JP_MO2_LAYER,    // _LAYER_1

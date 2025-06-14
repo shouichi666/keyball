@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // キーコードを送信する際のディレイ（ミリ秒単位）
-#define TAP_CODE_DELAY 0
+#define TAP_CODE_DELAY 1
 
 // タップとホールドの判定において、ホールドを強制する（素早いタップでもホールドと認識されやすくなる）
 // #define QUICK_TAP_TERM 0
@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 // 188ms以内に離すとタップ、それ以降はホールドと判定される
-#define TAPPING_TERM 175
+#define TAPPING_TERM 180
 
 // コンボの発動時間
 #define COMBO_TERM 35
