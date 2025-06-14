@@ -15,14 +15,14 @@ static uint16_t click_timer;
 static int16_t mouse_movement_accumulator;  // マウス移動量蓄積
 
 static void enable_click_layer(void) {
-    layer_on(_CLICK_LAYER);
+    layer_on(_LAYER_2);
     click_timer = timer_read();
     state = CLICKABLE;
 }
 
 static void disable_click_layer(void) {
     state = NONE;
-    layer_off(_CLICK_LAYER);
+    layer_off(_LAYER_2);
 }
 
 static int16_t my_abs(int16_t num) { return num < 0 ? -num : num; }
@@ -51,7 +51,7 @@ static tap_hold_key_config_t jp_mo2_config = {
     .state = {0},
     .tap_keycode = KC_LNG1,
     // .tap_keycode = KC_BSPC,
-    .hold_target = _JP_MO2_LAYER,
+    .hold_target = _LAYER_1,
     .hold_type = HOLD_TYPE_LAYER,
 };
 
@@ -370,18 +370,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     // マウスレイヤー中にマウスボタン以外のキーが押されたらレイヤーOFF
-    if (layer_state_is(_CLICK_LAYER)) {
+    if (layer_state_is(_LAYER_2)) {
         switch (keycode) {
             case KC_BTN1:
             case KC_BTN2:
-            case MO(_NAV_LAYER):
+            case MO(_LAYER_3):
                 // これらのキーは CLICK_LAYER の状態に影響を与えない
                 break;
             default:
                 // それ以外のキーが押されたら
                 if (record->event.pressed) {
                     // ただし、NAV_LAYER がアクティブでない場合のみ CLICK_LAYER を無効にする
-                    if (!layer_state_is(_NAV_LAYER)) {
+                    if (!layer_state_is(_LAYER_3)) {
                         disable_click_layer();
                     }
                 }
@@ -489,3 +489,24 @@ void matrix_scan_user(void) {
     //     disable_click_layer();
     // }
 }
+
+//-- タップダンスの処理ここから ----------------
+// void dance_q_finished(tap_dance_state_t *state, void *user_data) {
+//     if (state->count == 1) {
+//         register_code16(KC_Q);
+//     } else {
+//         register_code(KC_ESCAPE);
+//     }
+// }
+
+// void dance_q_reset(tap_dance_state_t *state, void *user_data) {
+//     if (state->count == 1) {
+//         unregister_code16(KC_Q);
+//     } else {
+//         unregister_code(KC_ESCAPE);
+//     }
+// }
+
+// tap_dance_action_t tap_dance_actions[] = {
+//     [TD_Q_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
+// };

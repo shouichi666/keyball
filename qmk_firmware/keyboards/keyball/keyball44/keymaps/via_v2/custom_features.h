@@ -8,7 +8,7 @@
 #define MOUSE_ACTION_COOLDOWN_MS 100
 #define HORIZONTAL_SENSITIVITY_FACTOR 2
 #define VERTICAL_SENSITIVITY_FACTOR 2
-#define CLICKABLE_RESET_TIME 800   // to_reset_timeをより分かりやすい名前に変更
+#define CLICKABLE_RESET_TIME 800  // to_reset_timeをより分かりやすい名前に変更
 #define CLICKABLE_MIN_MOVEMENT 5  // to_clickable_movementをより分かりやすい名前に変更
 
 // 独自のキー
@@ -16,15 +16,16 @@ enum custom_keycodes {
     JP_MO2 = 0x9F00,  // tap: JP,   hold: レイヤー２,
     EN_LGUI,          // tap: EN,   hold: Command,
     GESTURE,
+    TD_Q_ESC,
 };
 
 // レイヤーj
 enum custom_layers {
-    _BASE_LAYER = 0,  // _LAYER_0
-    _JP_MO2_LAYER,    // _LAYER_1
-    _CLICK_LAYER,     // _LAYER_2
-    _NAV_LAYER,       // _LAYER_3
-    _NUM_LAYER,       // _LAYER_4
+    _LAYER_0 = 0,
+    _LAYER_1,
+    _LAYER_2,
+    _LAYER_3,
+    _LAYER_4,
 };
 
 // --- マウスジェスチャー状態 ---
