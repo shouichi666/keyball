@@ -1,7 +1,8 @@
 #ifndef CUSTOM_FEATURES_H
 #define CUSTOM_FEATURES_H
 
-#include QMK_KEYBOARD_H  // QMKの主要な定義をインクルード (report_mouse_t, keyrecord_t など)
+// QMKの主要な定義をインクルード (report_mouse_t, keyrecord_t など)
+#include QMK_KEYBOARD_H
 
 // --- 設定可能な定数 ---
 #define GESTURE_MIN_ACCUMULATED_MOVEMENT 65
@@ -11,12 +12,16 @@
 #define CLICKABLE_RESET_TIME 800  // to_reset_timeをより分かりやすい名前に変更
 #define CLICKABLE_MIN_MOVEMENT 5  // to_clickable_movementをより分かりやすい名前に変更
 
+// Tap Dance専用の enum を定義
+enum tap_dance_keycodes {
+    TD_Q_ESC = 0,
+};
+
 // 独自のキー
 enum custom_keycodes {
     JP_MO2 = 0x9F00,  // tap: JP,   hold: レイヤー２,
     EN_LGUI,          // tap: EN,   hold: Command,
     GESTURE,
-    TD_Q_ESC,
 };
 
 // レイヤーj

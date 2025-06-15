@@ -9,3 +9,6 @@ SRC += custom_features.c
 
 # COMBOを有効化
 COMBO_ENABLE = yes
+
+# Tap Danceを有効
+TAP_DANCE_ENABLE = yes

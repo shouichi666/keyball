@@ -62,7 +62,7 @@ static tap_hold_key_config_t en_lgui_config = {
     .hold_type = HOLD_TYPE_KEYCODE,
 };
 
-// ジェスチャー関連
+// ジェスチャー関連l
 static tap_hold_key_config_t g_key_config = {
     .state = {0},
     .tap_keycode = KC_BTN1,
@@ -363,6 +363,28 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
     return report_to_send;
 }
+
+//-- タップダンスの処理ここから ----------------
+void dance_q_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 1) {
+        register_code16(KC_Q);
+    } else {
+        register_code(KC_ESCAPE);
+    }
+}
+
+void dance_q_reset(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 1) {
+        unregister_code16(KC_Q);
+    } else {
+        unregister_code(KC_ESCAPE);
+    }
+}
+
+tap_dance_action_t tap_dance_actions[] = {
+    [TD_Q_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
+};
+
 // キーイベント処理
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
@@ -489,24 +511,3 @@ void matrix_scan_user(void) {
     //     disable_click_layer();
     // }
 }
-
-//-- タップダンスの処理ここから ----------------
-// void dance_q_finished(tap_dance_state_t *state, void *user_data) {
-//     if (state->count == 1) {
-//         register_code16(KC_Q);
-//     } else {
-//         register_code(KC_ESCAPE);
-//     }
-// }
-
-// void dance_q_reset(tap_dance_state_t *state, void *user_data) {
-//     if (state->count == 1) {
-//         unregister_code16(KC_Q);
-//     } else {
-//         unregister_code(KC_ESCAPE);
-//     }
-// }
-
-// tap_dance_action_t tap_dance_actions[] = {
-//     [TD_Q_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
-// };
