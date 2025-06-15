@@ -14,59 +14,35 @@ static click_state_t state = NONE;
 static uint16_t click_timer;
 static int16_t mouse_movement_accumulator;  // マウス移動量蓄積
 
+// --- ジェスチャー用移動量アキュムレータ ---
+static int16_t gesture_x_accumulator = 0;
+static int16_t gesture_y_accumulator = 0;
+
+// --- タップ・ホールドキー識別子 ---
+typedef enum { TH_BS_MO2, TH_EN_LGUI, TH_G_KEY, TH_KC_LALT, TH_KC_LCTRL, NUM_TAP_HOLD_KEYS } tap_hold_key_id_t;
+
+// --- タップ・ホールドキー設定の配列 ---
+static tap_hold_key_config_t tap_hold_keys[NUM_TAP_HOLD_KEYS] = {
+    [TH_BS_MO2] = {.state = {0}, .tap_keycode = KC_BSPC, .hold_target = LAYER_1, .hold_type = HOLD_TYPE_LAYER},
+    [TH_EN_LGUI] = {.state = {0}, .tap_keycode = KC_LNG2, .hold_target = KC_LGUI, .hold_type = HOLD_TYPE_KEYCODE},
+    [TH_G_KEY] = {.state = {0}, .tap_keycode = KC_BTN1, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
+    [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_ESC, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
+    [TH_KC_LCTRL] = {.state = {0}, .tap_keycode = KC_LNG1, .hold_target = KC_LCTL, .hold_type = HOLD_TYPE_KEYCODE},
+};
+
+// --- ヘルパー関数 ---
 static void enable_click_layer(void) {
-    layer_on(_LAYER_2);
+    layer_on(LAYER_2);
     click_timer = timer_read();
     state = CLICKABLE;
 }
 
 static void disable_click_layer(void) {
     state = NONE;
-    layer_off(_LAYER_2);
+    layer_off(LAYER_2);
 }
 
 static int16_t my_abs(int16_t num) { return num < 0 ? -num : num; }
-
-static bool other_key_pressed_while_tap_hold_pending = false;  // 他のキーが押されたフラグ
-
-// タップ・ホールドキー設定
-// 既存キー
-static tap_hold_key_config_t kc_lalt_config = {
-    .state = {0},
-    .tap_keycode = KC_ESC,
-    .hold_target = KC_LALT,
-    .hold_type = HOLD_TYPE_KEYCODE,
-};
-
-static tap_hold_key_config_t kc_lctrl_config = {
-    .state = {0},
-    .tap_keycode = KC_LNG1,
-    .hold_target = KC_LCTL,
-    .hold_type = HOLD_TYPE_KEYCODE,
-};
-
-// カスタムキー
-static tap_hold_key_config_t bs_mo2_config = {
-    .state = {0},
-    .tap_keycode = KC_BSPC,
-    .hold_target = _LAYER_1,
-    .hold_type = HOLD_TYPE_LAYER,
-};
-
-static tap_hold_key_config_t en_lgui_config = {
-    .state = {0},
-    .tap_keycode = KC_LNG2,
-    .hold_target = KC_LGUI,
-    .hold_type = HOLD_TYPE_KEYCODE,
-};
-
-// ジェスチャー関連l
-static tap_hold_key_config_t g_key_config = {
-    .state = {0},
-    .tap_keycode = KC_BTN1,
-    .hold_target = KC_NO,
-    .hold_type = HOLD_TYPE_KEYCODE,
-};
 
 // ホールドアクション有効化
 static void activate_hold_action(tap_hold_key_config_t *config) {
@@ -103,12 +79,7 @@ static void perform_tap_action(tap_hold_key_config_t *config) {
 
 // タップ・ホールドキー処理 (process_record_user から呼び出し)
 // この関数は、キーイベントがカスタム処理によって「消費された」場合にfalseを返す。
-// QMKのデフォルト処理も行いたい場合はtrueを返す必要がある。
-// ここでは、カスタムロジックでホールドやタップアクションを処理しつつ、
-// 同時押しされた他のキーもQMKの通常の処理パスに乗るように変更する。
-static bool process_tap_hold_key(tap_hold_key_config_t *config,
-                                 keyrecord_t *record,
-                                 bool is_other_key_pressed_for_tap) {
+static bool process_tap_hold_key(tap_hold_key_config_t *config, keyrecord_t *record) {
     if (record->event.pressed) {
         config->state.key_pressed = true;
         config->state.timer = timer_read();
@@ -119,17 +90,11 @@ static bool process_tap_hold_key(tap_hold_key_config_t *config,
         if (config->state.active_for_hold) {
             deactivate_hold_action(config);
         } else if (!config->state.tap_action_done) {
-            if (timer_elapsed(config->state.timer) < TAPPING_TERM && !is_other_key_pressed_for_tap) {
+            if (timer_elapsed(config->state.timer) < TAPPING_TERM) {
                 perform_tap_action(config);
             }
         }
     }
-    // ここで false を返すと、QMK の通常のキー処理を抑制する。
-    // 今回のケースでは、カスタムのタップ・ホールドロジックが主であり、
-    // そのキー自体はQMKに渡す必要がないことが多いので false のままとする。
-    // しかし、他のキーとの同時押しで問題が出ているのは、
-    // このキー自体が消費されることではなく、process_record_user が途中でreturn falseしてしまうことにある。
-    // そのため、呼び出し元で適切な return 値を制御する。
     return false;  // 基本的にカスタム処理で完結するのでfalseを返す
 }
 
@@ -152,8 +117,24 @@ static void matrix_scan_tap_hold_key(tap_hold_key_config_t *config) {
     }
 }
 
-static int16_t gesture_x_accumulator = 0;
-static int16_t gesture_y_accumulator = 0;
+// ジェスチャートリガーキーが押された/離されたときの共通処理
+// (この関数は元のコードにはなく、リファクタリングで追加されたものですが、`process_record_user`で利用しているため残します。元の`pointing_device_task_user`とは独立しています。)
+static void handle_gesture_trigger_key_state(bool pressed) {
+    is_gesture_key_tapped = pressed;
+    if (pressed) {
+        mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // クールダウンを即時解除
+        gesture_x_accumulator = 0;
+        gesture_y_accumulator = 0;
+        active_mouse_action = MOUSE_ACTION_STATE_NONE;
+    } else {
+        is_gesture_key_tapped = false;  // 明示的に false にする
+        active_mouse_action = MOUSE_ACTION_STATE_NONE;
+        mouse_action_cooldown_timer = timer_read();
+        mouse_movement_accumulator = 0;
+        gesture_x_accumulator = 0;
+        gesture_y_accumulator = 0;
+    }
+}
 
 // ポインティングデバイスのタスク
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
@@ -190,17 +171,16 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         // ジェスチャー有効トリガー判定
         bool m_key_is_gesture_trigger = is_gesture_key_tapped;
         bool kc_lalt_is_gesture_trigger =
-            kc_lalt_config.state.key_pressed || kc_lalt_config.state.active_for_hold || is_gesture_key_tapped;
+            tap_hold_keys[TH_KC_LALT].state.key_pressed ||
+            tap_hold_keys[TH_KC_LALT].state.active_for_hold;  // 元のコードのkc_lalt_config.stateを参照
         bool g_is_gesture_trigger =
-            g_key_config.state.key_pressed || g_key_config.state.active_for_hold || is_gesture_key_tapped;
+            tap_hold_keys[TH_G_KEY].state.key_pressed ||
+            tap_hold_keys[TH_G_KEY].state.active_for_hold;  // 元のコードのg_key_config.stateを参照
 
-        // ジェスチャートリガーが有効な場合のみ、ジェスチャー用アキュムレータに現在の動きを加算
         if (m_key_is_gesture_trigger || kc_lalt_is_gesture_trigger || g_is_gesture_trigger) {
             gesture_x_accumulator += current_x;
             gesture_y_accumulator += current_y;
         } else {
-            // ジェスチャートリガーキーがどれも押されていない場合、アキュムレータをクリア
-            // これにより、不必要な蓄積を防ぎ、次のジェスチャーの開始時にクリーンな状態を保証
             gesture_x_accumulator = 0;
             gesture_y_accumulator = 0;
             active_mouse_action = MOUSE_ACTION_STATE_NONE;  // ジェスチャー状態もリセット
@@ -274,9 +254,9 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
                 if (action_performed_in_this_cycle) {
                     mouse_action_cooldown_timer = timer_read();
-                    gesture_x_accumulator = 0;  // アクション実行後にリセット
-                    gesture_y_accumulator = 0;  // アクション実行後にリセット
-                    active_mouse_action = MOUSE_ACTION_STATE_NONE;
+                    gesture_x_accumulator = 0;                      // アクション実行後にリセット
+                    gesture_y_accumulator = 0;                      // アクション実行後にリセット
+                    active_mouse_action = MOUSE_ACTION_STATE_NONE;  // 元のコードではここでもNONEにリセット
                 }
 
             } else if (active_mouse_action != MOUSE_ACTION_STATE_NONE) {
@@ -285,7 +265,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                     (active_mouse_action == MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE && current_x < 0) ||
                     (active_mouse_action == MOUSE_ACTION_STATE_FOR_UP_SWIPE && current_y > 0) ||
                     (active_mouse_action == MOUSE_ACTION_STATE_FOR_DOWN_SWIPE && current_y < 0) ||
-                    (current_x == 0 && current_y == 0)) {
+                    (current_x == 0 && current_y == 0)) {  // 元のコードの「動きが止まったらリセット」の条件
                     active_mouse_action = MOUSE_ACTION_STATE_NONE;
                     mouse_action_cooldown_timer = timer_read();
                     gesture_x_accumulator = 0;  // リセット
@@ -293,7 +273,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 }
             }
 
-        } else {  // ジェスチャートリガーが押されていない場合
+        } else {  // ジェスチャートリガーが押されていない場合 (マウスが動いている)
             // ジェスチャートリガーが離されたら状態をリセット
             if (active_mouse_action != MOUSE_ACTION_STATE_NONE || gesture_x_accumulator != 0 ||
                 gesture_y_accumulator != 0) {
@@ -304,10 +284,11 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
             }
 
             // マウスが動いていない場合のクリック状態の処理
+            // (これは元のコードのelse if current_x == 0 && current_y == 0のブロックから移動)
             switch (state) {
                 case CLICKABLE:
                     if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {
-                        // disable_click_layer();
+                        // disable_click_layer(); // 元々コメントアウト
                     }
                     break;
 
@@ -316,7 +297,6 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                         mouse_movement_accumulator = 0;
                         state = NONE;
                     }
-
                     break;
 
                 default:
@@ -335,7 +315,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         switch (state) {
             case CLICKABLE:
                 if (timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {  // 定数を使用
-                    // disable_click_layer();
+                    // disable_click_layer(); // 元々コメントアウト
                 }
                 break;
 
@@ -381,23 +361,19 @@ tap_dance_action_t tap_dance_actions[] = {
 
 // キーイベント処理
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (record->event.pressed) {
-        other_key_pressed_while_tap_hold_pending = false;
-    }
-
     // マウスレイヤー中にマウスボタン以外のキーが押されたらレイヤーOFF
-    if (layer_state_is(_LAYER_2)) {
+    if (layer_state_is(LAYER_2)) {
         switch (keycode) {
             case KC_BTN1:
             case KC_BTN2:
-            case MO(_LAYER_3):
+            case MO(LAYER_3):
                 // これらのキーは CLICK_LAYER の状態に影響を与えない
                 break;
             default:
                 // それ以外のキーが押されたら
                 if (record->event.pressed) {
                     // ただし、NAV_LAYER がアクティブでない場合のみ CLICK_LAYER を無効にする
-                    if (!layer_state_is(_LAYER_3)) {
+                    if (!layer_state_is(LAYER_3)) {
                         disable_click_layer();
                     }
                 }
@@ -426,62 +402,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
 
         case BS_MO2:
-            // process_tap_hold_key は、そのキーが処理済みであることを示す false を返す。
-            // しかし、process_record_user 全体としては他のキーの処理を継続したいので、
-            // ここでは continue_qmk_processing を変更しない。
-            return process_tap_hold_key(&bs_mo2_config, record, other_key_pressed_while_tap_hold_pending);
-
+            return process_tap_hold_key(&tap_hold_keys[TH_BS_MO2], record);
         case EN_LGUI:
-            return process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
+            return process_tap_hold_key(&tap_hold_keys[TH_EN_LGUI], record);
 
         case GESTURE:
-            if (record->event.pressed) {
-                is_gesture_key_tapped = true;
-                mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // クールダウンを即時解除
-                gesture_x_accumulator = 0;
-                gesture_y_accumulator = 0;
-                active_mouse_action = MOUSE_ACTION_STATE_NONE;
-            } else {
-                is_gesture_key_tapped = false;
-                active_mouse_action = MOUSE_ACTION_STATE_NONE;
-                mouse_action_cooldown_timer = timer_read();
-                mouse_movement_accumulator = 0;
-                gesture_x_accumulator = 0;
-                gesture_y_accumulator = 0;
-            }
-            return process_tap_hold_key(&g_key_config, record, other_key_pressed_while_tap_hold_pending);
-
+            handle_gesture_trigger_key_state(record->event.pressed);
+            return process_tap_hold_key(&tap_hold_keys[TH_G_KEY], record);
         case KC_LCTL:
-            return process_tap_hold_key(&kc_lctrl_config, record, other_key_pressed_while_tap_hold_pending);
+            return process_tap_hold_key(&tap_hold_keys[TH_KC_LCTRL], record);
 
         case KC_LALT:
-            if (record->event.pressed) {
-                is_gesture_key_tapped = true;  // LALT もジェスチャートリガーになり得る
-                mouse_action_cooldown_timer = timer_read() - MOUSE_ACTION_COOLDOWN_MS - 1;  // クールダウンを即時解除
-                gesture_x_accumulator = 0;
-                gesture_y_accumulator = 0;
-                active_mouse_action = MOUSE_ACTION_STATE_NONE;
-            } else {
-                is_gesture_key_tapped = false;
-                active_mouse_action = MOUSE_ACTION_STATE_NONE;
-                mouse_action_cooldown_timer = timer_read();
-                mouse_movement_accumulator = 0;
-                gesture_x_accumulator = 0;
-                gesture_y_accumulator = 0;
-            }
-
-            return process_tap_hold_key(&kc_lalt_config, record, other_key_pressed_while_tap_hold_pending);
+            handle_gesture_trigger_key_state(record->event.pressed);
+            return process_tap_hold_key(&tap_hold_keys[TH_KC_LALT], record);
 
         default:
             // 他のキーが押されたらロールオーバー処理
             if (record->event.pressed) {
-                // other_key_pressed_while_tap_hold_pending は関数冒頭で制御しているので、
-                // ここでは直接 tap_hold_rollover を呼び出す
-                check_tap_hold_rollover(&bs_mo2_config);
-                check_tap_hold_rollover(&en_lgui_config);
-                check_tap_hold_rollover(&g_key_config);
-                check_tap_hold_rollover(&kc_lalt_config);
-                check_tap_hold_rollover(&kc_lctrl_config);
+                for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
+                    check_tap_hold_rollover(&tap_hold_keys[i]);
+                }
             }
             break;
     }
@@ -491,11 +431,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // キーボードスキャン処理
 void matrix_scan_user(void) {
     // 各タップ・ホールドキーのホールド判定
-    matrix_scan_tap_hold_key(&bs_mo2_config);
-    matrix_scan_tap_hold_key(&en_lgui_config);
-    matrix_scan_tap_hold_key(&g_key_config);
-    matrix_scan_tap_hold_key(&kc_lalt_config);
-    matrix_scan_tap_hold_key(&kc_lctrl_config);
+    for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
+        matrix_scan_tap_hold_key(&tap_hold_keys[i]);
+    }
 
     // CLICKABLE状態のタイムアウト処理 (process_record_user で制御されるためコメントアウト)
     // if (state == CLICKABLE && timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {

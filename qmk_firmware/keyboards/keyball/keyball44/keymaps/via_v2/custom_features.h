@@ -27,11 +27,11 @@ enum custom_keycodes {
 
 // レイヤーj
 enum custom_layers {
-    _LAYER_0 = 0,
-    _LAYER_1,
-    _LAYER_2,
-    _LAYER_3,
-    _LAYER_4,
+    LAYER_0 = 0,
+    LAYER_1,
+    LAYER_2,
+    LAYER_3,
+    LAYER_4,
 };
 
 // --- マウスジェスチャー状態 ---
