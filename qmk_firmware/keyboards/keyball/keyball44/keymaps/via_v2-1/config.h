@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 // 188ms以内に離すとタップ、それ以降はホールドと判定される
-#define TAPPING_TERM 160
+#define TAPPING_TERM 175
 
 // コンボの発動時間
 #define COMBO_TERM 55
