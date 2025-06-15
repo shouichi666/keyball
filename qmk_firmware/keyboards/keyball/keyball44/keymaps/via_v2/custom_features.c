@@ -40,17 +40,15 @@ static tap_hold_key_config_t kc_lalt_config = {
 
 static tap_hold_key_config_t kc_lctrl_config = {
     .state = {0},
-    // .tap_keycode = KC_ESC,
-    .tap_keycode = KC_UP,
+    .tap_keycode = KC_LNG1,
     .hold_target = KC_LCTL,
     .hold_type = HOLD_TYPE_KEYCODE,
 };
 
 // カスタムキー
-static tap_hold_key_config_t jp_mo2_config = {
+static tap_hold_key_config_t bs_mo2_config = {
     .state = {0},
-    .tap_keycode = KC_LNG1,
-    // .tap_keycode = KC_BSPC,
+    .tap_keycode = KC_BSPC,
     .hold_target = _LAYER_1,
     .hold_type = HOLD_TYPE_LAYER,
 };
@@ -431,11 +429,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         }
 
-        case JP_MO2:
+        case BS_MO2:
             // process_tap_hold_key は、そのキーが処理済みであることを示す false を返す。
             // しかし、process_record_user 全体としては他のキーの処理を継続したいので、
             // ここでは continue_qmk_processing を変更しない。
-            process_tap_hold_key(&jp_mo2_config, record, other_key_pressed_while_tap_hold_pending);
+            process_tap_hold_key(&bs_mo2_config, record, other_key_pressed_while_tap_hold_pending);
             break;
 
         case EN_LGUI:
@@ -486,7 +484,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 // other_key_pressed_while_tap_hold_pending は関数冒頭で制御しているので、
                 // ここでは直接 tap_hold_rollover を呼び出す
-                check_tap_hold_rollover(&jp_mo2_config);
+                check_tap_hold_rollover(&bs_mo2_config);
                 check_tap_hold_rollover(&en_lgui_config);
                 check_tap_hold_rollover(&g_key_config);
                 check_tap_hold_rollover(&kc_lalt_config);
@@ -500,7 +498,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // キーボードスキャン処理
 void matrix_scan_user(void) {
     // 各タップ・ホールドキーのホールド判定
-    matrix_scan_tap_hold_key(&jp_mo2_config);
+    matrix_scan_tap_hold_key(&bs_mo2_config);
     matrix_scan_tap_hold_key(&en_lgui_config);
     matrix_scan_tap_hold_key(&g_key_config);
     matrix_scan_tap_hold_key(&kc_lalt_config);

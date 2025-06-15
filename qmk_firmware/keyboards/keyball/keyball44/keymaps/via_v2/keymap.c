@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // make SKIP_GIT=yes keyball/keyball44:via_v1
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_LAYER_0] = LAYOUT_universal(
-        KC_TAB ,TD(TD_Q_ESC), KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_BSPC   ,
-        KC_LCTL, KC_A       , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_MINS   ,
+        KC_TAB ,TD(TD_Q_ESC), KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
+        KC_LCTL, KC_A       , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_QUOT   ,
         KC_LSFT, KC_Z       , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL    ,
-                             LGUI(KC_Z), MO(4)  , KC_LALT  , EN_LGUI , KC_SPC ,                       KC_ENT , JP_MO2,       RCTL_T(KC_LNG2) , KC_RALT  , GESTURE
+                             LGUI(KC_Z), MO(4)  , KC_LALT  , EN_LGUI , KC_SPC ,                       KC_ENT , BS_MO2,       RCTL_T(KC_LNG2) , KC_RALT  , GESTURE
     ),
 
     [_LAYER_1] = LAYOUT_universal(
@@ -59,10 +59,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
-// コンボで使用するキーコードの記載
+//-- タップダンスの処理ここから ----------------
+
+//-- コンボで使用するキーコードの記載 -----------
 const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
 const uint16_t PROGMEM combo_fd[] = {KC_F, KC_D, COMBO_END};
-const uint16_t PROGMEM combo_sp[] = {KC_LALT, JP_MO2, COMBO_END};
+const uint16_t PROGMEM combo_sp[] = {KC_LALT, BS_MO2, COMBO_END};
 
 // コンボの定義
 combo_t key_combos[] = {
