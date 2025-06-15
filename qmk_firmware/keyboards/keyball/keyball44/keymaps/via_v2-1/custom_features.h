@@ -33,6 +33,7 @@ enum custom_layers {
     LAYER_2,
     LAYER_3,
     LAYER_4,
+    LAYER_5,
 };
 
 // --- マウスジェスチャー状態 ---
