@@ -226,8 +226,9 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                 }
 
                 if (is_mostly_horizontal) {
-                    if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
-
+                    if (kc_lalt_is_gesture_trigger) {
+                        unregister_code(KC_LALT);
+                    }
                     if (g_is_gesture_trigger) {
                         /* nope */
                     }
@@ -248,8 +249,9 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
                     }
 
                 } else if (is_mostly_vertical) {
-                    if (kc_lalt_is_gesture_trigger) unregister_code(KC_LALT);
-
+                    if (kc_lalt_is_gesture_trigger) {
+                        unregister_code(KC_LALT);
+                    }
                     if (g_is_gesture_trigger) {
                         /* nope */
                     }
@@ -365,22 +367,16 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 //-- タップダンスの処理ここから ----------------
 void dance_q_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 1) {
-        register_code16(KC_Q);
+        tap_code(KC_A);
     } else {
-        register_code(KC_ESCAPE);
+        tap_code(KC_ESCAPE);
     }
 }
 
-void dance_q_reset(tap_dance_state_t *state, void *user_data) {
-    if (state->count == 1) {
-        unregister_code16(KC_Q);
-    } else {
-        unregister_code(KC_ESCAPE);
-    }
-}
+void dance_q_reset(tap_dance_state_t *state, void *user_data) {}
 
 tap_dance_action_t tap_dance_actions[] = {
-    [TD_Q_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
+    [TD_A_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
 };
 
 // キーイベント処理
@@ -433,12 +429,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // process_tap_hold_key は、そのキーが処理済みであることを示す false を返す。
             // しかし、process_record_user 全体としては他のキーの処理を継続したいので、
             // ここでは continue_qmk_processing を変更しない。
-            process_tap_hold_key(&bs_mo2_config, record, other_key_pressed_while_tap_hold_pending);
-            break;
+            return process_tap_hold_key(&bs_mo2_config, record, other_key_pressed_while_tap_hold_pending);
 
         case EN_LGUI:
-            process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
-            break;
+            return process_tap_hold_key(&en_lgui_config, record, other_key_pressed_while_tap_hold_pending);
 
         case GESTURE:
             if (record->event.pressed) {
@@ -458,8 +452,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return process_tap_hold_key(&g_key_config, record, other_key_pressed_while_tap_hold_pending);
 
         case KC_LCTL:
-            process_tap_hold_key(&kc_lctrl_config, record, other_key_pressed_while_tap_hold_pending);
-            break;
+            return process_tap_hold_key(&kc_lctrl_config, record, other_key_pressed_while_tap_hold_pending);
 
         case KC_LALT:
             if (record->event.pressed) {

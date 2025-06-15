@@ -14,7 +14,7 @@
 
 // Tap Dance専用の enum を定義
 enum tap_dance_keycodes {
-    TD_Q_ESC = 0,
+    TD_A_ESC = 0,
     TD_BS_MO1,
 };
 
