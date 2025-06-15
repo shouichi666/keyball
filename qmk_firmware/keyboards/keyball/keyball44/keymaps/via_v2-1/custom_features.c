@@ -45,6 +45,8 @@ static void disable_click_layer(void) {
 static int16_t my_abs(int16_t num) { return num < 0 ? -num : num; }
 
 // ホールドアクション有効化
+// EN_LGUIのホールドはTap Dance内で直接register/unregisterするため、
+// ここは他のTHキー専用として残します。
 static void activate_hold_action(tap_hold_key_config_t *config) {
     if (config->state.active_for_hold) return;
 
@@ -54,10 +56,12 @@ static void activate_hold_action(tap_hold_key_config_t *config) {
         register_code(config->hold_target);
     }
     config->state.active_for_hold = true;
-    config->state.tap_action_done = true;
+    config->state.tap_action_done = true;  // ホールドが確定したらタップアクションは実行しない
 }
 
 // ホールドアクション無効化
+// EN_LGUIのホールドはTap Dance内で直接register/unregisterするため、
+// ここは他のTHキー専用として残します。
 static void deactivate_hold_action(tap_hold_key_config_t *config) {
     if (!config->state.active_for_hold) return;
 
@@ -69,7 +73,7 @@ static void deactivate_hold_action(tap_hold_key_config_t *config) {
     config->state.active_for_hold = false;
 }
 
-// タップアクション実行
+// タップアクション実行 (この関数はTH_EN_LGUIでは使われませんが、他のTHキーのために残します)
 static void perform_tap_action(tap_hold_key_config_t *config) {
     if (config->tap_keycode != KC_NO) {
         tap_code(config->tap_keycode);
@@ -118,7 +122,6 @@ static void matrix_scan_tap_hold_key(tap_hold_key_config_t *config) {
 }
 
 // ジェスチャートリガーキーが押された/離されたときの共通処理
-// (この関数は元のコードにはなく、リファクタリングで追加されたものですが、`process_record_user`で利用しているため残します。元の`pointing_device_task_user`とは独立しています。)
 static void handle_gesture_trigger_key_state(bool pressed) {
     is_gesture_key_tapped = pressed;
     if (pressed) {
@@ -345,6 +348,30 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 }
 
 //-- タップダンスの処理ここから ----------------
+
+// EN_LGUIのタップダンス処理
+void dance_en_lgui_finished(tap_dance_state_t *td_state, void *user_data) {
+    if (td_state->pressed) {  // キーがまだ押されている（ホールドされている）場合
+        register_code(KC_LGUI);
+    } else {  // キーが離された（タップと判定された）場合
+        if (td_state->count == 1) {
+            // シングルタップでKC_LNG2
+            register_code(KC_LNG2);
+            unregister_code(KC_LNG2);
+        } else if (td_state->count == 2) {
+            // ダブルタップでKC_LNG1
+            register_code(KC_LNG1);    // KC_LNG1 を押す
+            unregister_code(KC_LNG1);  // KC_LNG1 を離す
+        }
+    }
+}
+
+void dance_en_lgui_reset(tap_dance_state_t *td_state, void *user_data) {
+    unregister_code(KC_LGUI);
+    unregister_code(KC_LNG1);
+    unregister_code(KC_LNG2);
+}
+
 void dance_q_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 1) {
         tap_code(KC_A);
@@ -357,6 +384,7 @@ void dance_q_reset(tap_dance_state_t *state, void *user_data) {}
 
 tap_dance_action_t tap_dance_actions[] = {
     [TD_A_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
+    [TD_EN_LGUI_LANG] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_en_lgui_finished, dance_en_lgui_reset),
 };
 
 // キーイベント処理
@@ -420,7 +448,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // 他のキーが押されたらロールオーバー処理
             if (record->event.pressed) {
                 for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-                    check_tap_hold_rollover(&tap_hold_keys[i]);
+                    // TH_EN_LGUI は Tap Dance で処理されるため、ここから除外
+                    if (i != TH_EN_LGUI) {
+                        check_tap_hold_rollover(&tap_hold_keys[i]);
+                    }
                 }
             }
             break;
@@ -432,11 +463,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void matrix_scan_user(void) {
     // 各タップ・ホールドキーのホールド判定
     for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-        matrix_scan_tap_hold_key(&tap_hold_keys[i]);
+        // TH_EN_LGUI は Tap Dance で処理されるため、ここではスキップ
+        if (i != TH_EN_LGUI) {
+            matrix_scan_tap_hold_key(&tap_hold_keys[i]);
+        }
     }
-
-    // CLICKABLE状態のタイムアウト処理 (process_record_user で制御されるためコメントアウト)
-    // if (state == CLICKABLE && timer_elapsed(click_timer) > CLICKABLE_RESET_TIME) {
-    //     disable_click_layer();
-    // }
 }

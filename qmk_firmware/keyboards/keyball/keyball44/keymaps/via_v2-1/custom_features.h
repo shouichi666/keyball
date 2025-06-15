@@ -16,6 +16,7 @@
 enum tap_dance_keycodes {
     TD_A_ESC = 0,
     TD_BS_MO1,
+    TD_EN_LGUI_LANG,
 };
 
 // 独自のキー
