@@ -45,7 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KEYBALL_SCROLL_DIV_DEFAULT 5
 
 // タップとホールドの判定において、ホールドを強制する（素早いタップでもホールドと認識されやすくなる）
-#define QUICK_TAP_TERM 0
+#define QUICK_TAP_TERM 10
 
 // タップがあったときにホールドを待たずにそのキーが入力されるようにする
 // (タップキーが押されて TAPPING_TERM 以内に離されれば、他のキーが押されてもタップとして機能する)

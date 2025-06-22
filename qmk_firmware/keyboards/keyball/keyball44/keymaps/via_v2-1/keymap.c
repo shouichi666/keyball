@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT_universal(
         KC_TAB , KC_Q       , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_QUOT   ,
-        KC_LCTL, MT(MOD_RSFT,KC_A),KC_S, KC_D     , MT(MOD_LCTL,KC_F)   , KC_G     ,                             KC_H     , KC_J     , KC_K     , KC_L     , MT(MOD_RSFT, KC_SCLN), KC_MINS,
+        KC_LCTL, MT(MOD_RSFT,KC_A),KC_S, KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , MT(MOD_RSFT, KC_SCLN), KC_MINS,
         KC_LSFT, KC_Z       , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL    ,
                               KC_BTN2  , MO(4)  , KC_LALT  , TD(TD_EN_LGUI_LANG) , KC_SPC ,                   KC_ENT , BS_MO2,       RCTL_T(KC_LNG2) , KC_RALT  , LT(5, KC_BTN2)
     ),
