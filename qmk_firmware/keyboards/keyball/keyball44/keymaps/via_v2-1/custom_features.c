@@ -27,7 +27,7 @@ static tap_hold_key_config_t tap_hold_keys[NUM_TAP_HOLD_KEYS] = {
     [TH_EN_LGUI] = {.state = {0}, .tap_keycode = KC_LNG2, .hold_target = KC_LGUI, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_G_KEY] = {.state = {0}, .tap_keycode = KC_BTN1, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_ESC, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
-    [TH_KC_LCTRL] = {.state = {0}, .tap_keycode = KC_LNG1, .hold_target = KC_LCTL, .hold_type = HOLD_TYPE_KEYCODE},
+    [TH_KC_LCTRL] = {.state = {0}, .tap_keycode = KC_TAB, .hold_target = KC_LCTL, .hold_type = HOLD_TYPE_KEYCODE},
 };
 
 // --- ヘルパー関数 ---
@@ -374,7 +374,7 @@ void dance_en_lgui_reset(tap_dance_state_t *td_state, void *user_data) {
 
 void dance_q_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 1) {
-        tap_code(KC_A);
+        tap_code(KC_Q);
     } else {
         tap_code(KC_ESCAPE);
     }

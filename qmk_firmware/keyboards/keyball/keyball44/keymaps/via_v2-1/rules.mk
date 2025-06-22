@@ -12,3 +12,5 @@ COMBO_ENABLE = yes
 
 # Tap Danceを有効
 TAP_DANCE_ENABLE = yes
+
+PMW3360_CPI = 3200 # 例: CPIを3200に設定 (デフォルトは1600や800の場合が多い)

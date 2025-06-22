@@ -5,12 +5,12 @@
 #include QMK_KEYBOARD_H
 
 // --- 設定可能な定数 ---
-#define GESTURE_MIN_ACCUMULATED_MOVEMENT 65
+#define GESTURE_MIN_ACCUMULATED_MOVEMENT 45
 #define MOUSE_ACTION_COOLDOWN_MS 100
 #define HORIZONTAL_SENSITIVITY_FACTOR 2
 #define VERTICAL_SENSITIVITY_FACTOR 2
 #define CLICKABLE_RESET_TIME 800  // to_reset_timeをより分かりやすい名前に変更
-#define CLICKABLE_MIN_MOVEMENT 5  // to_clickable_movementをより分かりやすい名前に変更
+#define CLICKABLE_MIN_MOVEMENT 4  // to_clickable_movementをより分かりやすい名前に変更
 
 // Tap Dance専用の enum を定義
 enum tap_dance_keycodes {
