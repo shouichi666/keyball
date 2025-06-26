@@ -23,11 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // キーコードを送信する際のディレイ（ミリ秒単位）
 #define TAP_CODE_DELAY 0
 
+// 次のタップが来るのを待つ期間
+#define TD_TAP_INTERVAL 10
+
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
-#define TAPPING_TERM 180
+#define TAPPING_TERM 185
 
 // コンボの発動時間
-#define COMBO_TERM 55
+#define COMBO_TERM 20
 
 // 自動マウス移動機能を有効にする（QMKのポイントデバイス機能の一部）
 #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -45,7 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KEYBALL_SCROLL_DIV_DEFAULT 5
 
 // タップとホールドの判定において、ホールドを強制する（素早いタップでもホールドと認識されやすくなる）
-#define QUICK_TAP_TERM 10
+#define QUICK_TAP_TERM 4
 
 // タップがあったときにホールドを待たずにそのキーが入力されるようにする
 // (タップキーが押されて TAPPING_TERM 以内に離されれば、他のキーが押されてもタップとして機能する)

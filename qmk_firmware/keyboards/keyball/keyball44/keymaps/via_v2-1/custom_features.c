@@ -23,7 +23,7 @@ typedef enum { TH_BS_MO2, TH_EN_LGUI, TH_G_KEY, TH_KC_LALT, TH_KC_LCTRL, NUM_TAP
 
 // --- タップ・ホールドキー設定の配列 ---
 static tap_hold_key_config_t tap_hold_keys[NUM_TAP_HOLD_KEYS] = {
-    [TH_BS_MO2] = {.state = {0}, .tap_keycode = KC_BSPC, .hold_target = LAYER_1, .hold_type = HOLD_TYPE_LAYER},
+    [TH_BS_MO2] = {.state = {0}, .tap_keycode = KC_ENT, .hold_target = LAYER_1, .hold_type = HOLD_TYPE_LAYER},
     [TH_EN_LGUI] = {.state = {0}, .tap_keycode = KC_LNG2, .hold_target = KC_LGUI, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_G_KEY] = {.state = {0}, .tap_keycode = KC_BTN1, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_ESC, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
@@ -73,7 +73,7 @@ static void deactivate_hold_action(tap_hold_key_config_t *config) {
     config->state.active_for_hold = false;
 }
 
-// タップアクション実行 (この関数はTH_EN_LGUIでは使われませんが、他のTHキーのために残します)
+// タップアクション実行 (この関数はTH_EN_LGUIでは使われませんが、他のTHキーのために残します)fskajfk
 static void perform_tap_action(tap_hold_key_config_t *config) {
     if (config->tap_keycode != KC_NO) {
         tap_code(config->tap_keycode);
@@ -355,23 +355,60 @@ void dance_en_lgui_finished(tap_dance_state_t *td_state, void *user_data) {
         register_code(KC_LGUI);
     } else {  // キーが離された（タップと判定された）場合
         if (td_state->count == 1) {
+            unregister_code(KC_LGUI);
+
             // シングルタップでKC_LNG2
             register_code(KC_LNG2);
             unregister_code(KC_LNG2);
         } else if (td_state->count == 2) {
-            // ダブルタップでKC_LNG1
-            register_code(KC_LNG1);    // KC_LNG1 を押す
-            unregister_code(KC_LNG1);  // KC_LNG1 を離す
+            unregister_code(KC_LGUI);
+
+            register_code(KC_LCTL);
+            register_code(KC_UP);
+            unregister_code(KC_UP);
+            unregister_code(KC_LCTL);
         }
     }
 }
 
 void dance_en_lgui_reset(tap_dance_state_t *td_state, void *user_data) {
     unregister_code(KC_LGUI);
-    unregister_code(KC_LNG1);
     unregister_code(KC_LNG2);
+
+    // if (layer_state_is(LAYER_5)) {
+    //     layer_off(LAYER_5);
+    // }
+    // unregister_code(KC_ESC);
 }
 
+// BS_MO2 のタップダンス処理
+void dance_bs_mo2_finished(tap_dance_state_t *td_state, void *user_data) {
+    if (td_state->count == 1) {   // シングルタップまたはシングルホールド
+        if (td_state->pressed) {  // キーがまだ押されている (ホールド状態)
+            // シングルホールド: LAYER_1 を有効化 (MO2)
+            layer_on(LAYER_1);
+        } else {  // キーが離された (タップ状態)
+            // シングルタップ: KC_BSPC を送信
+            tap_code(KC_BSPC);
+        }
+    } else if (td_state->count == 2) {  // ダブルタップまたはダブルタップホールド
+        if (td_state->pressed) {        // キーがまだ押されている (ホールド状態)
+            // ダブルタップホールド: KC_BSPC を長押し
+            register_code(KC_BSPC);
+        } else {  // キーが離された (タップ状態)
+            // ダブルタップ: KC_BSPC を送信
+            tap_code(KC_BSPC);
+        }
+    }
+}
+
+void dance_bs_mo2_reset(tap_dance_state_t *td_state, void *user_data) {
+    // ホールド中に押されていた可能性があるキーをすべて離す
+    layer_off(LAYER_1);        // MO2 レイヤーをオフにする
+    unregister_code(KC_BSPC);  // KC_BSPC の長押しを解除する
+}
+
+// Q
 void dance_q_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 1) {
         tap_code(KC_Q);
@@ -385,10 +422,17 @@ void dance_q_reset(tap_dance_state_t *state, void *user_data) {}
 tap_dance_action_t tap_dance_actions[] = {
     [TD_A_ESC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_q_finished, dance_q_reset),
     [TD_EN_LGUI_LANG] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_en_lgui_finished, dance_en_lgui_reset),
+    [TD_BS_MO1] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_bs_mo2_finished, dance_bs_mo2_reset),
 };
 
 // キーイベント処理
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // 他のキー入力があった場合に TH_KC_LALT のロールオーバーをチェック
+    if (record->event.pressed) {
+        check_tap_hold_rollover(&tap_hold_keys[TH_KC_LALT]);
+        check_tap_hold_rollover(&tap_hold_keys[TH_BS_MO2]);
+    }
+
     // マウスレイヤー中にマウスボタン以外のキーが押されたらレイヤーOFF
     if (layer_state_is(LAYER_2)) {
         switch (keycode) {
@@ -429,6 +473,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         }
 
+        case KC_LALT:
+            handle_gesture_trigger_key_state(record->event.pressed);
+            return process_tap_hold_key(&tap_hold_keys[TH_KC_LALT], record);
+
         case BS_MO2:
             return process_tap_hold_key(&tap_hold_keys[TH_BS_MO2], record);
         case EN_LGUI:
@@ -437,23 +485,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case GESTURE:
             handle_gesture_trigger_key_state(record->event.pressed);
             return process_tap_hold_key(&tap_hold_keys[TH_G_KEY], record);
-        case KC_LCTL:
-            return process_tap_hold_key(&tap_hold_keys[TH_KC_LCTRL], record);
 
-        case KC_LALT:
-            handle_gesture_trigger_key_state(record->event.pressed);
-            return process_tap_hold_key(&tap_hold_keys[TH_KC_LALT], record);
+            // case KC_LCTL:
+            //     process_tap_hold_key(&tap_hold_keys[TH_KC_LCTRL], record);
+            //     return true;
 
         default:
             // 他のキーが押されたらロールオーバー処理
             if (record->event.pressed) {
                 for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
                     // TH_EN_LGUI は Tap Dance で処理されるため、ここから除外
-                    if (i != TH_EN_LGUI) {
-                        check_tap_hold_rollover(&tap_hold_keys[i]);
-                    }
+                    // if (i != TH_EN_LGUI) {
+                    check_tap_hold_rollover(&tap_hold_keys[i]);
+                    // }
                 }
             }
+
             break;
     }
     return true;  // 処理を継続するかどうかの最終決定
@@ -464,8 +511,8 @@ void matrix_scan_user(void) {
     // 各タップ・ホールドキーのホールド判定
     for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
         // TH_EN_LGUI は Tap Dance で処理されるため、ここではスキップ
-        if (i != TH_EN_LGUI) {
-            matrix_scan_tap_hold_key(&tap_hold_keys[i]);
-        }
+        // if (i != TH_EN_LGUI) {
+        matrix_scan_tap_hold_key(&tap_hold_keys[i]);
+        // }
     }
 }
