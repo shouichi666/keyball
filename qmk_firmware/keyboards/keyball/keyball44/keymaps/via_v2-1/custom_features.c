@@ -21,9 +21,17 @@ static int16_t gesture_y_accumulator = 0;
 // --- タップ・ホールドキー識別子 ---
 typedef enum { TH_BS_MO2, TH_EN_LGUI, TH_G_KEY, TH_KC_LALT, TH_KC_LCTRL, NUM_TAP_HOLD_KEYS } tap_hold_key_id_t;
 
+// --- BS_MO2 専用状態管理 ---
+#define BS_MO2_DOUBLE_TAP_TERM 1000  // ダブルタップ判定時間 (100ms)
+static uint16_t bs_mo2_timer = 0;
+static uint8_t bs_mo2_tap_count = 0;
+static bool bs_mo2_key_pressed = false;            // BS_MO2キーが物理的に押されているか
+static bool bs_mo2_bspc_hold_registered = false;   // KC_BSPC長押しが登録されたか
+static bool bs_mo2_layer_hold_registered = false;  // レイヤーホールドが登録されたか
+
 // --- タップ・ホールドキー設定の配列 ---
 static tap_hold_key_config_t tap_hold_keys[NUM_TAP_HOLD_KEYS] = {
-    [TH_BS_MO2] = {.state = {0}, .tap_keycode = KC_ENT, .hold_target = LAYER_1, .hold_type = HOLD_TYPE_LAYER},
+    [TH_BS_MO2] = {.state = {0}, .tap_keycode = KC_BSPC, .hold_target = LAYER_1, .hold_type = HOLD_TYPE_LAYER},
     [TH_EN_LGUI] = {.state = {0}, .tap_keycode = KC_LNG2, .hold_target = KC_LGUI, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_G_KEY] = {.state = {0}, .tap_keycode = KC_BTN1, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_ESC, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
@@ -427,10 +435,22 @@ tap_dance_action_t tap_dance_actions[] = {
 
 // キーイベント処理
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // BS_MO2以外のキーが押された時に、BS_MO2がホールド待機中であればホールドを確定させる
+    if (record->event.pressed && keycode != BS_MO2) {
+        if (bs_mo2_key_pressed && !bs_mo2_layer_hold_registered && !bs_mo2_bspc_hold_registered &&
+            bs_mo2_tap_count == 1) {
+            if (timer_elapsed(bs_mo2_timer) < TAPPING_TERM) {
+                // TAPPING_TERM内に他のキーが押されたら、ホールドを確定
+                layer_on(LAYER_1);
+                bs_mo2_layer_hold_registered = true;
+            }
+        }
+    }
+
     // 他のキー入力があった場合に TH_KC_LALT のロールオーバーをチェック
     if (record->event.pressed) {
         check_tap_hold_rollover(&tap_hold_keys[TH_KC_LALT]);
-        check_tap_hold_rollover(&tap_hold_keys[TH_BS_MO2]);
+        // check_tap_hold_rollover(&tap_hold_keys[TH_BS_MO2]);
     }
 
     // マウスレイヤー中にマウスボタン以外のキーが押されたらレイヤーOFF
@@ -477,8 +497,54 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             handle_gesture_trigger_key_state(record->event.pressed);
             return process_tap_hold_key(&tap_hold_keys[TH_KC_LALT], record);
 
+            // case BS_MO2:
+            //     return process_tap_hold_key(&tap_hold_keys[TH_BS_MO2], record);
+
         case BS_MO2:
-            return process_tap_hold_key(&tap_hold_keys[TH_BS_MO2], record);
+            if (record->event.pressed) {
+                bs_mo2_key_pressed = true;
+
+                // 前回のタップからの時間が短ければタップカウントを増やす
+                if (timer_elapsed(bs_mo2_timer) < BS_MO2_DOUBLE_TAP_TERM) {
+                    bs_mo2_tap_count++;
+                } else {
+                    bs_mo2_tap_count = 1;  // 時間が空いていればリセット
+                }
+                bs_mo2_timer = timer_read();  // タイマー更新
+
+                if (bs_mo2_tap_count == 2) {
+                    // ダブルタップが確定したら、バックスペース長押しを開始
+                    register_code(KC_BSPC);
+                    bs_mo2_bspc_hold_registered = true;
+                    // シングルタップ時のホールドが誤発動しないようにする
+                    bs_mo2_layer_hold_registered = false;
+                    layer_off(LAYER_1);
+                }
+                // シングルプレスの場合は、matrix_scan_userでホールド判定されるのを待つ
+            } else {  // キーが離された時
+                bs_mo2_key_pressed = false;
+
+                if (bs_mo2_bspc_hold_registered) {
+                    // 長押し状態だったら解除
+                    unregister_code(KC_BSPC);
+                    bs_mo2_bspc_hold_registered = false;
+                    bs_mo2_tap_count = 0;  // 状態を完全にリセット
+                } else if (bs_mo2_layer_hold_registered) {
+                    // レイヤーホールド状態だったら解除
+                    layer_off(LAYER_1);
+                    bs_mo2_layer_hold_registered = false;
+                    // bs_mo2_tap_count はリセットしない
+                } else {
+                    // ホールドされなかった場合（＝タップ）
+                    if (bs_mo2_tap_count < 2) {
+                        tap_code(tap_hold_keys[TH_BS_MO2].tap_keycode);
+                    }
+                    // bs_mo2_tap_countが2の場合はダブルタップの2打目なので、
+                    // 既に長押しが開始されており、離した時のアクションは不要。
+                }
+            }
+            return true;  // このキーのイベントはここで処理完了
+
         case EN_LGUI:
             return process_tap_hold_key(&tap_hold_keys[TH_EN_LGUI], record);
 
@@ -495,9 +561,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
                     // TH_EN_LGUI は Tap Dance で処理されるため、ここから除外
-                    // if (i != TH_EN_LGUI) {
-                    check_tap_hold_rollover(&tap_hold_keys[i]);
-                    // }
+                    if (i != TH_BS_MO2) {
+                        check_tap_hold_rollover(&tap_hold_keys[i]);
+                    }
                 }
             }
 
@@ -508,11 +574,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 // キーボードスキャン処理
 void matrix_scan_user(void) {
+    // [新設] BS_MO2のシングルプレスからのホールド判定
+    if (bs_mo2_key_pressed && bs_mo2_tap_count == 1 && !bs_mo2_layer_hold_registered && !bs_mo2_bspc_hold_registered) {
+        if (timer_elapsed(bs_mo2_timer) > TAPPING_TERM) {
+            // TAPPING_TERMを超えて押され続けていたらレイヤーホールドを発動
+            layer_on(LAYER_1);
+            bs_mo2_layer_hold_registered = true;
+        }
+    }
+
     // 各タップ・ホールドキーのホールド判定
     for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
         // TH_EN_LGUI は Tap Dance で処理されるため、ここではスキップ
-        // if (i != TH_EN_LGUI) {
-        matrix_scan_tap_hold_key(&tap_hold_keys[i]);
-        // }
+        if (i != TH_BS_MO2) {
+            matrix_scan_tap_hold_key(&tap_hold_keys[i]);
+        }
     }
 }
