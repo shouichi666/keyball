@@ -14,16 +14,17 @@
 
 // Tap Dance専用の enum を定義
 enum tap_dance_keycodes {
-    TD_A_ESC = 0,
-    TD_BS_MO1,
-    TD_EN_LGUI_LANG,
+    TD_EN_LGUI_LANG = 0,
 };
 
 // 独自のキー
 enum custom_keycodes {
-    BS_MO2 = 0x9F00,  // tap: JP,   hold: レイヤー２,
-    EN_LGUI,          // tap: EN,   hold: Command,
+    BS_MO5 = 0x9F00,
+    EN_LGUI,
     GESTURE,
+    ENT_MO4,
+    JP_MO2,
+    L_MO3,
 };
 
 // レイヤーj
