@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "custom_features.h"  // 作成したヘッダーファイルをインクルード-
+#include "features.h"  // 作成したヘッダーファイルをインクルード-
 #include "quantum.h"
 
 // clang-format off

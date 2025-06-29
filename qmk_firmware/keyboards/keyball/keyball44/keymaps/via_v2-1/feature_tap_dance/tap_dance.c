@@ -1,0 +1,20 @@
+#include "tap_dance.h"
+
+void dance_en_lgui_finished(tap_dance_state_t *td_state, void *user_data) {
+    if (td_state->pressed) {
+        register_code(KC_LGUI);
+    } else {
+        if (td_state->count == 1) {
+            tap_code(KC_LNG2);
+        } else if (td_state->count == 2) {
+            tap_code(KC_BTN2);
+        }
+    }
+}
+
+void dance_en_lgui_reset(tap_dance_state_t *td_state, void *user_data) { unregister_code(KC_LGUI); }
+
+// Tap Danceアクション配列
+tap_dance_action_t tap_dance_actions[] = {
+    [TD_EN_LGUI_LANG] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_en_lgui_finished, dance_en_lgui_reset),
+};
