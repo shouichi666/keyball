@@ -3,6 +3,18 @@
 #include "features.h"
 #include "quantum.h"
 
+// --- 設定定数 ---
+#define CLICKABLE_RESET_TIME 800
+#define CLICKABLE_MIN_MOVEMENT 4
+
+// --- クリック状態 ---
+typedef enum {
+    NONE = 0,
+    WAITING,
+    CLICKABLE,
+    CLICKING,
+} click_state_t;
+
 // マウスクリックレイヤー制御
 void enable_click_layer(void);
 void disable_click_layer(void);

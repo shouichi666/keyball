@@ -2,8 +2,6 @@
 
 #include "feature_tap_hold/tap_hold.h"  // tap_hold_keys 参照のため
 
-#define BS_MO2_DOUBLE_TAP_TERM 180  // ダブルタップ判定時間
-
 static uint16_t bs_mo5_timer = 0;
 static uint8_t bs_mo5_tap_count = 0;
 static bool bs_mo5_key_pressed = false;

@@ -51,9 +51,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_LCTL:
             return process_tap_hold_key(&tap_hold_keys[TH_KC_LCTRL], record);
 
-        case ENT_MO4:
+        case QUOT_MO4:
             handle_gesture_trigger_key_state(record->event.pressed);
-            return process_tap_hold_key(&tap_hold_keys[TH_ENT_MO4], record);
+            return process_tap_hold_key(&tap_hold_keys[TH_QUOT_MO4], record);
+
+        case ENT_MO5:
+            handle_gesture_trigger_key_state(record->event.pressed);
+            return process_tap_hold_key(&tap_hold_keys[TH_ENT_MO5], record);
 
         case BS_MO5:
             return handle_bs_mo5_record(record);
@@ -63,13 +67,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case EN_LGUI:
             return process_tap_hold_key(&tap_hold_keys[TH_EN_LGUI], record);
-
-        case L_MO3:
-            process_tap_hold_key(&tap_hold_keys[TH_L_MO3], record);
-            if (!record->event.pressed) {
-                layer_off(LAYER_3);
-            }
-            return true;
 
         case GESTURE:
             handle_gesture_trigger_key_state(record->event.pressed);

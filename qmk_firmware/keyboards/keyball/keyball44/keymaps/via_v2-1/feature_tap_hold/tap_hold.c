@@ -3,8 +3,8 @@
 tap_hold_key_config_t tap_hold_keys[NUM_TAP_HOLD_KEYS_DEFINED] = {
     [TH_BS_MO5] = {.state = {0}, .tap_keycode = KC_BSPC, .hold_target = LAYER_5, .hold_type = HOLD_TYPE_LAYER},
     [TH_JP_MO1] = {.state = {0}, .tap_keycode = KC_LNG1, .hold_target = LAYER_1, .hold_type = HOLD_TYPE_LAYER},
-    [TH_L_MO3] = {.state = {0}, .tap_keycode = KC_L, .hold_target = LAYER_3, .hold_type = HOLD_TYPE_LAYER},
-    [TH_ENT_MO4] = {.state = {0}, .tap_keycode = KC_ENT, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
+    [TH_ENT_MO5] = {.state = {0}, .tap_keycode = KC_ENT, .hold_target = LAYER_5, .hold_type = HOLD_TYPE_LAYER},
+    [TH_QUOT_MO4] = {.state = {0}, .tap_keycode = KC_QUOT, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_EN_LGUI] = {.state = {0}, .tap_keycode = KC_LNG2, .hold_target = KC_LGUI, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_G_KEY] = {.state = {0}, .tap_keycode = KC_BTN1, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_ESC, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
