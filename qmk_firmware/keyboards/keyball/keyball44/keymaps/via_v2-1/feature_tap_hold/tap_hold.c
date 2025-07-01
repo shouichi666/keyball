@@ -7,7 +7,7 @@ tap_hold_key_config_t tap_hold_keys[NUM_TAP_HOLD_KEYS_DEFINED] = {
     [TH_QUOT_MO4] = {.state = {0}, .tap_keycode = KC_QUOT, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_EN_LGUI] = {.state = {0}, .tap_keycode = KC_LNG2, .hold_target = KC_LGUI, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_G_KEY] = {.state = {0}, .tap_keycode = KC_BTN1, .hold_target = KC_NO, .hold_type = HOLD_TYPE_KEYCODE},
-    [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_ESC, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
+    [TH_KC_LALT] = {.state = {0}, .tap_keycode = KC_BTN2, .hold_target = KC_LALT, .hold_type = HOLD_TYPE_KEYCODE},
     [TH_KC_LCTRL] = {.state = {0}, .tap_keycode = KC_TAB, .hold_target = KC_LCTL, .hold_type = HOLD_TYPE_KEYCODE},
 };
 

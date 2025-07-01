@@ -7,7 +7,7 @@ void dance_en_lgui_finished(tap_dance_state_t *td_state, void *user_data) {
         if (td_state->count == 1) {
             tap_code(KC_LNG2);
         } else if (td_state->count == 2) {
-            tap_code(KC_BTN2);
+            tap_code(KC_ESC);
         }
     }
 }
