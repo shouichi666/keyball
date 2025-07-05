@@ -10,17 +10,14 @@
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // BS_MO5以外のキーが押された時、BS_MO5が押下中ならレイヤー確定
     if (record->event.pressed && keycode != BS_MO5) {
-        if (tap_hold_keys[TH_BS_MO5].state.key_pressed) {
-            layer_on(tap_hold_keys[TH_BS_MO5].hold_target);
-            // BS_MO5のレイヤーホールド登録フラグをbs_mo5.cに持っていったので無視してよい
-        }
+        handle_bs_mo5_interrupt();
     }
 
     if (record->event.pressed) {
         for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-            if (i != TH_BS_MO5) {
-                check_tap_hold_rollover(&tap_hold_keys[i]);
-            }
+            // if (i != TH_BS_MO5) {
+            check_tap_hold_rollover(&tap_hold_keys[i]);
+            // }
         }
     }
 
@@ -61,6 +58,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case BS_MO5:
             return handle_bs_mo5_record(record);
+            // return process_tap_hold_key(&tap_hold_keys[TH_BS_MO5], record);
 
         case JP_MO2:
             return process_tap_hold_key(&tap_hold_keys[TH_JP_MO1], record);
@@ -75,9 +73,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         default:
             if (record->event.pressed) {
                 for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-                    if (i != TH_BS_MO5) {
-                        check_tap_hold_rollover(&tap_hold_keys[i]);
-                    }
+                    // if (i != TH_BS_MO5) {
+                    check_tap_hold_rollover(&tap_hold_keys[i]);
+                    // }
                 }
             }
             break;
@@ -87,12 +85,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void matrix_scan_user(void) {
-    handle_bs_mo5_matrix_scan();
+    // handle_bs_mo5_matrix_scan();
 
     for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-        if (i != TH_BS_MO5) {
-            matrix_scan_tap_hold_key(&tap_hold_keys[i]);
-        }
+        // if (i != TH_BS_MO5) {
+        matrix_scan_tap_hold_key(&tap_hold_keys[i]);
+        // }
     }
 }
 

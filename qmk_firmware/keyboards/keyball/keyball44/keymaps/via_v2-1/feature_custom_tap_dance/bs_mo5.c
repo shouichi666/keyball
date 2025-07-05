@@ -20,7 +20,7 @@ bool handle_bs_mo5_record(keyrecord_t *record) {
         bs_mo5_timer = timer_read();
 
         if (bs_mo5_tap_count == 2) {
-            register_code(tap_hold_keys[TH_BS_MO5].tap_keycode);  // BSPC
+            register_code(tap_hold_keys[TH_BS_MO5].tap_keycode);  // BSPC長押し
             bs_mo5_bspc_hold_registered = true;
             bs_mo5_layer_hold_registered = false;
             layer_off(tap_hold_keys[TH_BS_MO5].hold_target);  // レイヤーOFF
@@ -51,5 +51,13 @@ void handle_bs_mo5_matrix_scan(void) {
             layer_on(tap_hold_keys[TH_BS_MO5].hold_target);
             bs_mo5_layer_hold_registered = true;
         }
+    }
+}
+
+void handle_bs_mo5_interrupt(void) {
+    // 他のキーが押されたらレイヤー確定処理（process_record_user 側で呼ぶ）
+    if (bs_mo5_key_pressed && !bs_mo5_layer_hold_registered && !bs_mo5_bspc_hold_registered) {
+        layer_on(tap_hold_keys[TH_BS_MO5].hold_target);
+        bs_mo5_layer_hold_registered = true;
     }
 }
