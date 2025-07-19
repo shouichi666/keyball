@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TD_TAP_INTERVAL 5
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
-#define TAPPING_TERM 140
+#define TAPPING_TERM 150
 
 // コンボの発動時間
 #define COMBO_TERM 40
@@ -55,4 +55,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define NO_TAPPING_FORCE_HOLD
 
 // // タップとホールドの判定において、次のキー入力があった場合はホールドと判定する（早めにホールドを有効にする）
-// #define PERMISSIVE_H
+#define PERMISSIVE_H

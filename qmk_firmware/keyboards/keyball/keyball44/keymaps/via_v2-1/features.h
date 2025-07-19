@@ -6,26 +6,23 @@
 // --- Tap Dance ---
 enum tap_dance_keycodes {
     TD_EN_LGUI_LANG = 0,
+    TD_BTN2_LALT_LANG,
 };
 
 // --- カスタムキーマップコード ---
 enum custom_keycodes {
-    BS_MO5 = 0x9F00,
+    BS_MO1 = 0x9F00,
     EN_LGUI,
-    GESTURE,
-    QUOT_MO4,
-    ENT_MO5,
-    JP_MO2,
+    ENT_SFT,
+    JP_MO1,
 };
 
 // --- タップ・ホールドキー識別子（tap_hold.c で定義する） ---
 typedef enum {
     TH_BS_MO5,
     TH_JP_MO1,
-    TH_QUOT_MO4,
-    TH_ENT_MO5,
+    TH_ENT_SFT,
     TH_EN_LGUI,
-    TH_G_KEY,
     TH_KC_LALT,
     TH_KC_LCTRL,
     NUM_TAP_HOLD_KEYS,

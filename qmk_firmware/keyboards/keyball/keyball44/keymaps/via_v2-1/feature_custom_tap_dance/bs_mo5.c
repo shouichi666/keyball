@@ -27,6 +27,8 @@ bool handle_bs_mo5_record(keyrecord_t *record) {
         }
 
     } else {
+        bool tapped = (timer_elapsed(bs_mo5_timer) < TAPPING_TERM);
+
         if (bs_mo5_bspc_hold_registered) {
             unregister_code(tap_hold_keys[TH_BS_MO5].tap_keycode);
             bs_mo5_bspc_hold_registered = false;
@@ -35,10 +37,11 @@ bool handle_bs_mo5_record(keyrecord_t *record) {
             layer_off(tap_hold_keys[TH_BS_MO5].hold_target);
             bs_mo5_layer_hold_registered = false;
         } else {
-            if (bs_mo5_tap_count < 2) {
+            if (bs_mo5_tap_count < 2 && tapped) {
                 tap_code(tap_hold_keys[TH_BS_MO5].tap_keycode);
             }
         }
+
         bs_mo5_key_pressed = false;
     }
 

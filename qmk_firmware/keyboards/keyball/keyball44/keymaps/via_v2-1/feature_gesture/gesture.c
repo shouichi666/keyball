@@ -36,9 +36,7 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
     report_mouse_t report_to_send = mouse_report;
 
     bool gesture_modifier_held =
-        tap_hold_keys[TH_KC_LALT].state.key_pressed || tap_hold_keys[TH_KC_LALT].state.active_for_hold ||
-        tap_hold_keys[TH_G_KEY].state.key_pressed || tap_hold_keys[TH_G_KEY].state.active_for_hold ||
-        tap_hold_keys[TH_QUOT_MO4].state.key_pressed || tap_hold_keys[TH_QUOT_MO4].state.active_for_hold;
+        tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold;
 
     // クールダウン中は何もしない（新規発火禁止）
     if (timer_elapsed(mouse_action_cooldown_timer) <= MOUSE_ACTION_COOLDOWN_MS) {
@@ -66,9 +64,10 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
             bool is_mostly_vertical = abs_y > abs_x * VERTICAL_SENSITIVITY_FACTOR;
 
             if (abs_x + abs_y >= GESTURE_MIN_ACCUMULATED_MOVEMENT) {
-                if (tap_hold_keys[TH_KC_LALT].state.key_pressed || tap_hold_keys[TH_KC_LALT].state.active_for_hold) {
-                    unregister_code(KC_LALT);
-                }
+                // if (tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold)
+                // {
+                //     unregister_code(KC_LALT);
+                // }
 
                 if (is_mostly_horizontal) {
                     if (gesture_x_accumulator < 0) {

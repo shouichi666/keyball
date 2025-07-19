@@ -8,16 +8,16 @@
 #include "feature_tap_hold/tap_hold.h"
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // BS_MO5以外のキーが押された時、BS_MO5が押下中ならレイヤー確定
-    if (record->event.pressed && keycode != BS_MO5) {
+    // BS_MO1以外のキーが押された時、BS_MO1が押下中ならレイヤー確定
+    if (record->event.pressed && keycode != BS_MO1) {
         handle_bs_mo5_interrupt();
     }
 
     if (record->event.pressed) {
         for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-            // if (i != TH_BS_MO5) {
-            check_tap_hold_rollover(&tap_hold_keys[i]);
-            // }
+            if (i != BS_MO1) {
+                check_tap_hold_rollover(&tap_hold_keys[i]);
+            }
         }
     }
 
@@ -48,34 +48,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_LCTL:
             return process_tap_hold_key(&tap_hold_keys[TH_KC_LCTRL], record);
 
-        case QUOT_MO4:
-            handle_gesture_trigger_key_state(record->event.pressed);
-            return process_tap_hold_key(&tap_hold_keys[TH_QUOT_MO4], record);
+        case ENT_SFT:
+            return process_tap_hold_key(&tap_hold_keys[TH_ENT_SFT], record);
 
-        case ENT_MO5:
-            handle_gesture_trigger_key_state(record->event.pressed);
-            return process_tap_hold_key(&tap_hold_keys[TH_ENT_MO5], record);
-
-        case BS_MO5:
+        case BS_MO1:
             return handle_bs_mo5_record(record);
-            // return process_tap_hold_key(&tap_hold_keys[TH_BS_MO5], record);
 
-        case JP_MO2:
+        case JP_MO1:
             return process_tap_hold_key(&tap_hold_keys[TH_JP_MO1], record);
 
         case EN_LGUI:
             return process_tap_hold_key(&tap_hold_keys[TH_EN_LGUI], record);
 
-        case GESTURE:
-            handle_gesture_trigger_key_state(record->event.pressed);
-            return process_tap_hold_key(&tap_hold_keys[TH_G_KEY], record);
-
         default:
             if (record->event.pressed) {
                 for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-                    // if (i != TH_BS_MO5) {
-                    check_tap_hold_rollover(&tap_hold_keys[i]);
-                    // }
+                    if (i != BS_MO1) {
+                        check_tap_hold_rollover(&tap_hold_keys[i]);
+                    }
                 }
             }
             break;
@@ -85,12 +75,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void matrix_scan_user(void) {
-    // handle_bs_mo5_matrix_scan();
-
     for (int i = 0; i < NUM_TAP_HOLD_KEYS; ++i) {
-        // if (i != TH_BS_MO5) {
         matrix_scan_tap_hold_key(&tap_hold_keys[i]);
-        // }
     }
 }
 

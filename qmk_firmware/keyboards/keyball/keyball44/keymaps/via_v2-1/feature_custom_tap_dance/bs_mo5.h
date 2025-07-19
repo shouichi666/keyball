@@ -2,7 +2,7 @@
 
 #include "quantum.h"
 
-#define BS_MO2_DOUBLE_TAP_TERM 180  // ダブルタップ判定時間
+#define BS_MO2_DOUBLE_TAP_TERM 150  // ダブルタップ判定時間
 
 // BS_MO5キーの処理
 bool handle_bs_mo5_record(keyrecord_t *record);
