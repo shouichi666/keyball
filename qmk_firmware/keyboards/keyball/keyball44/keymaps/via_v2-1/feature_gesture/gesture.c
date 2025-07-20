@@ -2,6 +2,8 @@
 
 #include "feature_tap_hold/tap_hold.h"
 
+extern bool is_td_lgui_physically_down;
+extern bool is_td_lalt_physically_down;
 static bool is_gesture_key_tapped = false;
 static int16_t gesture_x_accumulator = 0;
 static int16_t gesture_y_accumulator = 0;
@@ -36,7 +38,8 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
     report_mouse_t report_to_send = mouse_report;
 
     bool gesture_modifier_held =
-        tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold;
+        (tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold) ||
+        is_td_lalt_physically_down || is_td_lgui_physically_down;
 
     // クールダウン中は何もしない（新規発火禁止）
     if (timer_elapsed(mouse_action_cooldown_timer) <= MOUSE_ACTION_COOLDOWN_MS) {
@@ -64,6 +67,9 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
             bool is_mostly_vertical = abs_y > abs_x * VERTICAL_SENSITIVITY_FACTOR;
 
             if (abs_x + abs_y >= GESTURE_MIN_ACCUMULATED_MOVEMENT) {
+                if (is_td_lalt_physically_down) unregister_code(KC_LALT);
+
+                // if (is_td_lgui_physically_down) unregister_code(KC_LGUI);
                 // if (tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold)
                 // {
                 //     unregister_code(KC_LALT);
@@ -71,26 +77,46 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
 
                 if (is_mostly_horizontal) {
                     if (gesture_x_accumulator < 0) {
-                        register_code(KC_LCTL);
-                        tap_code(KC_RIGHT);
-                        unregister_code(KC_LCTL);
+                        if (is_td_lgui_physically_down) {
+                            register_code(KC_LALT);
+                            tap_code(KC_LEFT);
+                            unregister_code(KC_LALT);
+                        } else {
+                            register_code(KC_LCTL);
+                            tap_code(KC_RIGHT);
+                            unregister_code(KC_LCTL);
+                        }
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
                     } else {
-                        register_code(KC_LCTL);
-                        tap_code(KC_LEFT);
-                        unregister_code(KC_LCTL);
+                        if (is_td_lgui_physically_down) {
+                            register_code(KC_LALT);
+                            tap_code(KC_RIGHT);
+                            unregister_code(KC_LALT);
+                        } else {
+                            register_code(KC_LCTL);
+                            tap_code(KC_LEFT);
+                            unregister_code(KC_LCTL);
+                        }
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_RIGHT_SWIPE;
                     }
                 } else if (is_mostly_vertical) {
                     if (gesture_y_accumulator > 0) {
-                        register_code(KC_LCTL);
-                        tap_code(KC_DOWN);
-                        unregister_code(KC_LCTL);
+                        if (is_td_lgui_physically_down) {
+                            // nope
+                        } else {
+                            register_code(KC_LCTL);
+                            tap_code(KC_DOWN);
+                            unregister_code(KC_LCTL);
+                        }
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;
                     } else {
-                        register_code(KC_LCTL);
-                        tap_code(KC_UP);
-                        unregister_code(KC_LCTL);
+                        if (is_td_lgui_physically_down) {
+                            // nope
+                        } else {
+                            register_code(KC_LCTL);
+                            tap_code(KC_UP);
+                            unregister_code(KC_LCTL);
+                        }
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_DOWN_SWIPE;
                     }
                 }

@@ -7,6 +7,9 @@
 #include "feature_tap_dance/tap_dance.h"
 #include "feature_tap_hold/tap_hold.h"
 
+bool is_td_lgui_physically_down = false;
+bool is_td_lalt_physically_down = false;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // BS_MO1以外のキーが押された時、BS_MO1が押下中ならレイヤー確定
     if (record->event.pressed && keycode != BS_MO1) {
@@ -40,6 +43,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_BTN2:
             handle_mouse_button(keycode, record->event.pressed);
             break;
+
+        case TD(TD_EN_LGUI_LANG):
+            if (record->event.pressed) {
+                is_td_lgui_physically_down = true;
+            } else {
+                is_td_lgui_physically_down = false;
+            }
+            // tap-dance の通常の処理を妨げないように true を返す
+            return true;
+
+        case TD(TD_BTN2_LALT_LANG):
+            if (record->event.pressed) {
+                is_td_lalt_physically_down = true;
+            } else {
+                is_td_lalt_physically_down = false;
+            }
+            // tap-dance の通常の処理を妨げないように true を返す
+            return true;
 
         case KC_LALT:
             handle_gesture_trigger_key_state(record->event.pressed);

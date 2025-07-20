@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TAP_CODE_DELAY 0
 
 // 次のタップが来るのを待つ期間
-#define TD_TAP_INTERVAL 5
+#define TD_TAP_INTERVAL 4
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
 #define TAPPING_TERM 150
