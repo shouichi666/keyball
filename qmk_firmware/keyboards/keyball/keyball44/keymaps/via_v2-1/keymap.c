@@ -26,14 +26,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
         KC_LCTL  , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , SFT_T(KC_SCLN), KC_QUOT   ,
         KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , SFT_T(KC_EQL)    ,
-                              KC_BTN2  , MO(4)  , TD(TD_BTN2_LALT_LANG)  , TD(TD_EN_LGUI_LANG) , KC_SPC          ,              ENT_SFT, BS_MO1,       RCTL_T(KC_LNG2) , KC_RALT  , LT(4, KC_LNG1)
+                              KC_BTN2, MO(4), TD(TD_BTN2_LALT_LANG), TD(TD_EN_LGUI_LANG), KC_SPC,         ENT_SFT, BS_MO1,       RCTL_T(KC_LNG2) , KC_RALT  , LT(4, KC_BTN2)
     ),
-    // [LAYER_0] = LAYOUT_universal(
-    //     KC_TAB   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
-    //     KC_LCTL  , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  ,    ,KC_QUOT
-    //     KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL    ,
-    //                           KC_BTN2  , MO(4)  , KC_LALT  , TD(TD_EN_LGUI_LANG) , KC_SPC ,              BS_MO1 , JP_MO1,       RCTL_T(KC_LNG2) , KC_RALT  , LT(4, KC_ENT)
-    // ),
 
     [LAYER_1] = LAYOUT_universal(
         KC_GRV   , KC_QUES  , KC_7     , KC_8     , KC_9     , KC_AT    ,                                        KC_PERC     , KC_LPRN  , KC_UP     , KC_RPRN  , KC_LBRC  , KC_GRV   ,
@@ -50,7 +44,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [LAYER_2] = LAYOUT_universal(
         _______ ,  _______ ,  _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______ ,
-        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , KC_BTN1  , MO(3)    , _______ , _______ ,
+        _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , KC_BTN2  , KC_BTN1  , MO(3)    , _______ , _______ ,
         _______ ,  _______  , _______  , _______  , _______  , _______  ,                                        _______  , _______  , _______  , _______  , _______ , _______ ,
                               _______  , _______  ,  _______ , _______ , _______ ,                       
                               _______ , _______ ,       _______       , _______  , _______
