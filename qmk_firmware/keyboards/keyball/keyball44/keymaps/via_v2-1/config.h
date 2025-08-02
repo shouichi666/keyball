@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TD_TAP_INTERVAL 4
 
 // タップとホールドを判定する時間の閾値（ミリ秒単位）
-#define TAPPING_TERM 150
+#define TAPPING_TERM 180
 
 // コンボの発動時間
 #define COMBO_TERM 40

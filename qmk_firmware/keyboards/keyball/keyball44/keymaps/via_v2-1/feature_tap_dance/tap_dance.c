@@ -7,7 +7,9 @@ void dance_en_lgui_finished(tap_dance_state_t *td_state, void *user_data) {
         if (td_state->count == 1) {
             tap_code(KC_LNG2);
         } else if (td_state->count == 2) {
-            tap_code(KC_LNG1);
+            register_code(KC_LCTL);
+            tap_code(KC_UP);
+            unregister_code(KC_LCTL);
         }
     }
 }
@@ -19,18 +21,14 @@ void dance_btn2_lalt_finished(tap_dance_state_t *td_state, void *user_data) {
         register_code(KC_LALT);
     } else {
         if (td_state->count == 1) {
-            tap_code(KC_BTN2);
+            tap_code(KC_ESC);
         } else if (td_state->count == 2) {
-            unregister_code(KC_LALT);
-            layer_on(LAYER_5);
+
         }
     }
 }
 
-void dance_btn2_lalt_reset(tap_dance_state_t *td_state, void *user_data) {
-    unregister_code(KC_LALT);
-    layer_off(LAYER_5);
-}
+void dance_btn2_lalt_reset(tap_dance_state_t *td_state, void *user_data) { unregister_code(KC_LALT); }
 
 tap_dance_action_t tap_dance_actions[] = {
     // Tap Danceアクション配列

@@ -50,7 +50,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             } else {
                 is_td_lgui_physically_down = false;
             }
-            // tap-dance の通常の処理を妨げないように true を返す
             return true;
 
         case TD(TD_BTN2_LALT_LANG):
@@ -59,7 +58,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             } else {
                 is_td_lalt_physically_down = false;
             }
-            // tap-dance の通常の処理を妨げないように true を返す
             return true;
 
         case KC_LALT:
@@ -71,6 +69,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case ENT_SFT:
             return process_tap_hold_key(&tap_hold_keys[TH_ENT_SFT], record);
+
+        case DOWN_LSFT:
+            return process_tap_hold_key(&tap_hold_keys[TH_DOWN_LSFT], record);
 
         case BS_MO1:
             return handle_bs_mo5_record(record);

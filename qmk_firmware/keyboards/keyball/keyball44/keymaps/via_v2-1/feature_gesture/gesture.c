@@ -2,6 +2,7 @@
 
 #include "feature_tap_hold/tap_hold.h"
 
+bool is_mouse_layer_active_by_gesture = false;
 extern bool is_td_lgui_physically_down;
 extern bool is_td_lalt_physically_down;
 static bool is_gesture_key_tapped = false;
@@ -37,9 +38,10 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
     int16_t current_y = mouse_report.y;
     report_mouse_t report_to_send = mouse_report;
 
-    bool gesture_modifier_held =
-        (tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold) ||
-        is_td_lalt_physically_down || is_td_lgui_physically_down;
+    bool is_tap_ctrl_down =
+        (tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold);
+
+    bool gesture_modifier_held = is_tap_ctrl_down || is_td_lalt_physically_down;
 
     // クールダウン中は何もしない（新規発火禁止）
     if (timer_elapsed(mouse_action_cooldown_timer) <= MOUSE_ACTION_COOLDOWN_MS) {
@@ -68,18 +70,16 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
 
             if (abs_x + abs_y >= GESTURE_MIN_ACCUMULATED_MOVEMENT) {
                 if (is_td_lalt_physically_down) unregister_code(KC_LALT);
-
+                if (is_tap_ctrl_down) unregister_code(KC_LCTL);
                 // if (is_td_lgui_physically_down) unregister_code(KC_LGUI);
-                // if (tap_hold_keys[TH_KC_LCTRL].state.key_pressed || tap_hold_keys[TH_KC_LCTRL].state.active_for_hold)
-                // {
-                //     unregister_code(KC_LALT);
-                // }
 
                 if (is_mostly_horizontal) {
                     if (gesture_x_accumulator < 0) {
-                        if (is_td_lgui_physically_down) {
+                        if (is_td_lalt_physically_down) {
+                            register_code(KC_LGUI);
                             register_code(KC_LALT);
                             tap_code(KC_LEFT);
+                            unregister_code(KC_LGUI);
                             unregister_code(KC_LALT);
                         } else {
                             register_code(KC_LCTL);
@@ -88,9 +88,11 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
                         }
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_LEFT_SWIPE;
                     } else {
-                        if (is_td_lgui_physically_down) {
+                        if (is_td_lalt_physically_down) {
                             register_code(KC_LALT);
+                            register_code(KC_LGUI);
                             tap_code(KC_RIGHT);
+                            unregister_code(KC_LGUI);
                             unregister_code(KC_LALT);
                         } else {
                             register_code(KC_LCTL);
@@ -101,7 +103,7 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
                     }
                 } else if (is_mostly_vertical) {
                     if (gesture_y_accumulator > 0) {
-                        if (is_td_lgui_physically_down) {
+                        if (is_td_lalt_physically_down) {
                             // nope
                         } else {
                             register_code(KC_LCTL);
@@ -110,7 +112,7 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
                         }
                         active_mouse_action = MOUSE_ACTION_STATE_FOR_UP_SWIPE;
                     } else {
-                        if (is_td_lgui_physically_down) {
+                        if (is_td_lalt_physically_down) {
                             // nope
                         } else {
                             register_code(KC_LCTL);
@@ -125,13 +127,34 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
                 mouse_action_cooldown_timer = timer_read();
                 gesture_x_accumulator = 0;
                 gesture_y_accumulator = 0;
-                // is_gesture_key_tapped = false; // 必要ならここでリセットしないことも検討
-                // gesture_modifier_held = false;  // 同上
+            }
+
+            if (is_mostly_vertical) {
+                if (gesture_y_accumulator > 0) {
+                    if (is_td_lalt_physically_down) {
+                        layer_on(LAYER_3);
+                        is_mouse_layer_active_by_gesture = true;
+                    }
+                } else {
+                    if (is_td_lalt_physically_down) {
+                        layer_on(LAYER_3);
+                        is_mouse_layer_active_by_gesture = true;
+                    }
+                }
+            }
+
+            if (is_mostly_horizontal && is_mouse_layer_active_by_gesture) {
+                layer_off(LAYER_3);
+                is_mouse_layer_active_by_gesture = false;
             }
         } else {
             reset_gesture_state();
         }
     } else {
+        if (is_mouse_layer_active_by_gesture) {
+            layer_off(LAYER_3);
+            is_mouse_layer_active_by_gesture = false;
+        }
         reset_gesture_state();
     }
 
@@ -140,7 +163,7 @@ report_mouse_t gesture_pointing_device_task(report_mouse_t mouse_report) {
     report_to_send.h = -report_to_send.h;
 
     // ジェスチャー有効時はマウス移動・スクロールキャンセル
-    if (gesture_modifier_held) {
+    if (gesture_modifier_held && !is_mouse_layer_active_by_gesture) {
         report_to_send.x = 0;
         report_to_send.y = 0;
         report_to_send.v = 0;

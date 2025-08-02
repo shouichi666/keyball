@@ -15,12 +15,14 @@ enum custom_keycodes {
     EN_LGUI,
     ENT_SFT,
     JP_MO1,
+    DOWN_LSFT,
 };
 
 // --- タップ・ホールドキー識別子（tap_hold.c で定義する） ---
 typedef enum {
     TH_BS_MO5,
     TH_JP_MO1,
+    TH_DOWN_LSFT,
     TH_ENT_SFT,
     TH_EN_LGUI,
     TH_KC_LALT,
