@@ -67,11 +67,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_LCTL:
             return process_tap_hold_key(&tap_hold_keys[TH_KC_LCTRL], record);
 
-        case ENT_SFT:
-            return process_tap_hold_key(&tap_hold_keys[TH_ENT_SFT], record);
-
-        case DOWN_LSFT:
-            return process_tap_hold_key(&tap_hold_keys[TH_DOWN_LSFT], record);
+        case ENT_MO5:
+            return process_tap_hold_key(&tap_hold_keys[TH_ENT_MO5], record);
 
         case BS_MO1:
             return handle_bs_mo5_record(record);

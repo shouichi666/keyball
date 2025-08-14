@@ -25,8 +25,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT_universal(
         KC_TAB   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                                        KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_MINS   ,
         KC_LCTL  , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                                        KC_H     , KC_J     , KC_K     , KC_L     , KC_BSPC  , KC_QUOT   ,
-        KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_EQL    ,
-            LAG(KC_LEFT), LAG(KC_RIGHT), TD(TD_BTN2_LALT_LANG), TD(TD_EN_LGUI_LANG), KC_SPC,            ENT_SFT, JP_MO1,       RCTL_T(KC_LNG2) , KC_RALT  , LT(4, KC_BTN2)
+        KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     ,                                        KC_N     , KC_M     , KC_COMM  , KC_DOT   , SFT_T(KC_SLSH), KC_QUOT    ,
+            LAG(KC_LEFT), LAG(KC_RIGHT), TD(TD_BTN2_LALT_LANG), TD(TD_EN_LGUI_LANG), KC_SPC,            ENT_MO5, JP_MO1,       RCTL_T(KC_LNG2) , KC_RALT  , KC_BSPC
     ),
 
     // [LAYER_1] = LAYOUT_universal(
@@ -54,7 +54,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [LAYER_3] = LAYOUT_universal(
         _______ ,  KC_F1    , KC_F2    , KC_F3    , KC_F4    , _______   ,                                       _______  , _______   , _______  , _______  , _______  , _______  ,
-        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , _______   ,                                       _______  , _______   , _______  , _______  , _______  , _______  ,
+        _______ ,  KC_F5    , KC_F6    , KC_F7    , KC_F8    , _______   ,                                       KC_QUOT  , KC_MINS   , KC_QUOT  , _______  , _______  , _______  ,
         _______ ,  KC_F9    , KC_F10   , KC_F11   , KC_F12   , _______   ,                                       _______  , _______   , _______  , _______  , _______  , _______  ,
                               QK_BOOT  , _______  , _______  , _______ , _______ ,                       LGUI(KC_W) , LGUI(KC_LEFT) ,          _______      , _______  , _______
     ),
@@ -83,13 +83,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 //-- コンボで使用するキーコードの記載 -----------
 const uint16_t PROGMEM combo_jk[] = {KC_J, KC_K, COMBO_END};
 const uint16_t PROGMEM combo_fd[] = {KC_F, KC_D, COMBO_END};
-const uint16_t PROGMEM combo_sp[] = {KC_LALT, BS_MO1, COMBO_END};
 
 // コンボの定義
 combo_t key_combos[] = {
-    COMBO(combo_jk, MO(4)),
-    COMBO(combo_fd, MO(4)),
-    COMBO(combo_sp, MO(3)),
+    COMBO(combo_jk, KC_BSPC),
+    COMBO(combo_fd, LAG(KC_LEFT)),
 };
 
 uint16_t combo_size = ARRAY_SIZE(key_combos);

@@ -7,9 +7,7 @@ void dance_en_lgui_finished(tap_dance_state_t *td_state, void *user_data) {
         if (td_state->count == 1) {
             tap_code(KC_LNG2);
         } else if (td_state->count == 2) {
-            register_code(KC_LCTL);
-            tap_code(KC_UP);
-            unregister_code(KC_LCTL);
+            tap_code(KC_ESC);
         }
     }
 }
@@ -23,7 +21,6 @@ void dance_btn2_lalt_finished(tap_dance_state_t *td_state, void *user_data) {
         if (td_state->count == 1) {
             tap_code(KC_ESC);
         } else if (td_state->count == 2) {
-
         }
     }
 }

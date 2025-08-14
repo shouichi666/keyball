@@ -13,17 +13,15 @@ enum tap_dance_keycodes {
 enum custom_keycodes {
     BS_MO1 = 0x9F00,
     EN_LGUI,
-    ENT_SFT,
+    ENT_MO5,
     JP_MO1,
-    DOWN_LSFT,
 };
 
 // --- タップ・ホールドキー識別子（tap_hold.c で定義する） ---
 typedef enum {
     TH_BS_MO5,
     TH_JP_MO1,
-    TH_DOWN_LSFT,
-    TH_ENT_SFT,
+    TH_ENT_MO5,
     TH_EN_LGUI,
     TH_KC_LALT,
     TH_KC_LCTRL,

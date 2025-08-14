@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TAPPING_TERM 180
 
 // コンボの発動時間
-#define COMBO_TERM 40
+#define COMBO_TERM 50
 
 // 自動マウス移動機能を有効にする（QMKのポイントデバイス機能の一部）
 #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -55,4 +55,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define NO_TAPPING_FORCE_HOLD
 
 // // タップとホールドの判定において、次のキー入力があった場合はホールドと判定する（早めにホールドを有効にする）
-#define PERMISSIVE_H
+// #define PERMISSIVE_H
